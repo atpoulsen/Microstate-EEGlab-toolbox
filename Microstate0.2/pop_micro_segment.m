@@ -213,7 +213,7 @@ end
 
 
 %% Calculate measures of fit
-[KL, W, CV, GEV] = calc_fitmeas(X, OUTEEG.microstate.Res.A_all, ...
+[KL, W, CV, GEV] = calc_fitmeas(EEG.data, OUTEEG.microstate.Res.A_all, ...
     OUTEEG.microstate.Res.L_all);
 
 OUTEEG.microstate.Res.KL = KL;
@@ -865,7 +865,7 @@ for K = K_range
     %% Calculating chosen sorting measure
     switch OUTEEG.microstate.sorting
         case 'Global explained variance'
-            meas_name = 'GEV';
+            meas_name = 'GEVk';
             sort_method = 'descend';
             
             GFP = var(X);
