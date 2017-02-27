@@ -13,11 +13,11 @@
 % Microstate EEGlab toolbox: An introductionary guide.
 %
 % Author: Andreas Trier Poulsen, atpo@dtu.dk
-% Technical University of Denmark, Cognitive systems - December 2016
+% Technical University of Denmark, Cognitive systems - February 2017
 %
 % See also: eeglab
 
-% Copyright (C) 2016  Andreas Trier Poulsen, atpo@dtu.dk
+% Copyright (C) 2017  Andreas Trier Poulsen, atpo@dtu.dk
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

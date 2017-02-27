@@ -6,6 +6,10 @@
 %   >> pop_micro_plotseg ( EEG ); % pop up window
 %   >> pop_micro_plotseg ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
+% Please cite this toolbox as:
+% Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
+% Microstate EEGlab toolbox: An introductionary guide.
+%
 % Inputs:
 %   EEG        - EEG-lab EEG structure (channels x samples (x epochs)) with
 %                .microstate.fit.bestLabel (created by MicroFit.m)
@@ -13,11 +17,6 @@
 % Optional inputs:
 %  'epoch'     - timewindow of analysis (vector of timeframes).
 %  'Nplots'    - number of subplots. Has to be <= size(EEG.data,3)
-%
-%
-% Please cite this toolbox as:
-% Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-% Microstate EEGlab toolbox: An introductionary guide.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk

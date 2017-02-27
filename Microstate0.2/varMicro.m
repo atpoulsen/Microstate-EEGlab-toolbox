@@ -9,7 +9,7 @@ function [A_opt,L_opt,Res] = varMicro(X,K_range,opts)
 %  number of microstates (K). Free energy is also used to find the optimal
 %  number of microstates.
 %
-%  [1] - ???? (???), ???.
+%  [1] - (unpublished manuscript). Variational microstate analysis.
 %  [2] - Pascual-Marqui, R. D., Michel, C. M., & Lehmann, D. (1995).
 %        Segmentation of brain electrical activity into microstates: model
 %        estimation and validation. IEEE Transactions on Biomedical
@@ -20,7 +20,7 @@ function [A_opt,L_opt,Res] = varMicro(X,K_range,opts)
 %  Microstate EEGlab toolbox: An introductionary guide.
 %
 %  Andreas Trier Poulsen, atpo@dtu.dk
-%  Technical University of Denmark, Cognitive systems - December 2016
+%  Technical University of Denmark, Cognitive systems - February 2017
 %
 %  Inputs
 %  X       - EEG (channels x samples).

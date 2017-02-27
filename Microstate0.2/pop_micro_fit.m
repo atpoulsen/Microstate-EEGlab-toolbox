@@ -6,6 +6,10 @@
 %   >> EEG = pop_micro_fit ( EEG ); % pop up window
 %   >> EEG = pop_micro_fit ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
+% Please cite this toolbox as:
+% Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
+% Microstate EEGlab toolbox: An introductionary guide.
+%
 % Inputs:
 %   EEG             - EEG-lab EEG structure.
 %
@@ -24,10 +28,6 @@
 % Outputs:
 %   EEG.microstate.fit  - struct in EEG-lab EEG structure containing info 
 %                         on microstate fitting.
-%
-% Please cite this toolbox as:
-% Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-% Microstate EEGlab toolbox: An introductionary guide.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk

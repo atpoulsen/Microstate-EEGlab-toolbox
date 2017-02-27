@@ -23,7 +23,7 @@ function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %  Microstate EEGlab toolbox: An introductionary guide.
 %
 %  Andreas Trier Poulsen, atpo@dtu.dk
-%  Technical University of Denmark, Cognitive systems - December 2016
+%  Technical University of Denmark, Cognitive systems - February 2017
 %
 %  Inputs
 %  X       - EEG (channels x samples).
@@ -168,6 +168,7 @@ for K = K_range
     end
 
 end
+
 
 %% Saving additional results and info to Res struct
 Res.Z_all = Z_all;

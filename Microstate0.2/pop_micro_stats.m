@@ -23,10 +23,6 @@
 %                              standard deviation over trials (only for
 %                              epoched data).
 %
-% Please cite this toolbox as:
-% Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-% Microstate extension for EEGlab: An introductionary guide.
-%
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk
 % Technical University of Denmark, DTU Compute, Cognitive systems.

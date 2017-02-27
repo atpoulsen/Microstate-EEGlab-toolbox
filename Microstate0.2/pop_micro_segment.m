@@ -6,7 +6,7 @@
 % K-means as descibed in [1], Variational microstates as described in [2],
 % ordinary K-means using Matlabs built in function (Stats Toolbox needed)
 % or Topographical Atomize-Agglomerate Hierarchical Clustering as described
-% in [???].
+% in [3,4].
 %
 % Usage:
 %   >> OUTEEG = pop_micro_segment ( INEEG ); % pop up window
@@ -90,16 +90,13 @@
 %        Segmentation of brain electrical activity into microstates: model
 %        estimation and validation. IEEE Transactions on Biomedical
 %        Engineering.
-%  [2] - ???? (???), ???.
+%  [2] - (unpublished manuscript). Variational microstate analysis.
 %  [3] - Murray, M. M., Brunet, D., & Michel, C. M. (2008). Topographic
 %        ERP analyses: A step-by-step tutorial review. Brain Topography.
-%
-% Please cite this toolbox as:
-% Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-% Microstate extension for EEGlab: An introductionary guide.
+%  [4] - Brunet, D.(2011). Cartool reference Guide. Cartool v3.51.
 %
 % Author: Andreas Trier Poulsen, atpo@dtu.dk
-% Technical University of Denmark, Cognitive systems - December 2016
+% Technical University of Denmark, Cognitive systems - February 2017
 %
 % See also: eeglab
 
@@ -111,7 +108,7 @@
 %   and labels to the sort_names_opt cell.
 % * Make sure "com" string can handle new settings.
 
-% Copyright (C) 2016  Andreas Trier Poulsen, atpo@dtu.dk
+% Copyright (C) 2017  Andreas Trier Poulsen, atpo@dtu.dk
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -213,6 +210,16 @@ switch settings.algorithm
     otherwise
         error(['selected algorithm,''' settings.algorithm ''' not available'])
 end
+
+
+%% Calculate measures of fit
+[KL, W, CV, GEV] = calc_fitmeas(X, OUTEEG.microstate.Res.A_all, ...
+    OUTEEG.microstate.Res.L_all);
+
+OUTEEG.microstate.Res.KL = KL;
+OUTEEG.microstate.Res.W = W;
+OUTEEG.microstate.Res.CV = CV;
+OUTEEG.microstate.Res.GEV = GEV;
 
 
 %% Sorting microstates according to chosen method
@@ -675,9 +682,6 @@ end
 N_K = length(K_range);
 A_all = cell(N_K,1);
 L_all = cell(N_K,1);
-R2 = nan(N_K,1);
-sig2_modk = nan(N_K,1);
-sig2_modk_mcv = nan(N_K,1);
 MSE = nan(N_K,1);
 MSE_mcv = nan(N_K,1);
 
@@ -708,9 +712,8 @@ for K = K_range
     A_all{K_ind} = A;
     L_all{K_ind} = L;
     
-    % Calculating measures of fit
-    [MSE(K_ind), MSE_mcv(K_ind), sig2_modk(K_ind), sig2_modk_mcv(K_ind), R2(K_ind)] =...
-        calc_meas_kmeans(X,A,L,K);
+    % Calculating 
+    [MSE(K_ind), MSE_mcv(K_ind)] = calc_MSE(X,A,L,K);
     
     % Saving optimum solution amongst different values of K
     if MSE_mcv(K_ind) < MSE_mcv_opt
@@ -722,23 +725,21 @@ for K = K_range
     
 end
 
+
 %% Saving to Res struct
 OUTEEG.microstate.Res.K_opt = K_opt;
 OUTEEG.microstate.Res.A_all = A_all;
 OUTEEG.microstate.Res.L_all = L_all;
-OUTEEG.microstate.Res.sig2_modk = sig2_modk;
-OUTEEG.microstate.Res.sig2_modk_mcv = sig2_modk_mcv;
-OUTEEG.microstate.Res.R2 = R2;
 OUTEEG.microstate.Res.MSE = MSE;
 OUTEEG.microstate.Res.MSE_mcv = MSE_mcv;
 
 
 end
 
-function [MSE, MSE_mcv, sig2_modk, sig2_modk_mcv, R2] = calc_meas_kmeans(X,A,L,K)
+function [MSE, MSE_mcv] = calc_MSE(X,A,L,K)
 % Calculating measures of fit for Kmeans. 
 
-const = sum(sum(X.^2));
+% const = sum(sum(X.^2));
 [C,N] = size(X);
 
 % Calculating modified version of the predictive residual variance
@@ -746,11 +747,11 @@ const = sum(sum(X.^2));
 MSE = mean(mean((X-A(:,L)).^2));
 MSE_mcv = MSE * ((C-1)^-1 * (C-1-K))^-2;
 
-% Noise variance as calculated in Pascual-Marqui (1995)
-sig2_modk = (const - sum(sum(A(:,L).*X).^2)) / (N*(C-1));
-sig2_modk_mcv = sig2_modk * ((C-1)^-1 * (C-1-K))^-2;
-sig2_D = const / (N*(C-1));
-R2 = 1 - sig2_modk/sig2_D;
+% % Noise variance as calculated in Pascual-Marqui (1995)
+% sig2_modk = (const - sum(sum(A(:,L).*X).^2)) / (N*(C-1));
+% sig2_modk_mcv = sig2_modk * ((C-1)^-1 * (C-1-K))^-2;
+% sig2_D = const / (N*(C-1));
+% R2 = 1 - sig2_modk/sig2_D;
 
 
 end
