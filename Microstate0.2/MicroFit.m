@@ -6,8 +6,8 @@
 %  Note - Early untested version.
 %
 %  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-%  Microstate EEGlab toolbox: An introductionary guide.
+%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
+%  manuscript). Microstate EEGlab toolbox: An introductionary guide.
 % 
 %  Inputs
 %  EEG              - EEG-lab EEG structure with EEG.data (channels x time (x trials)).

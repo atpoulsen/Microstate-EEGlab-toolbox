@@ -6,9 +6,9 @@
 %   >> EEG = pop_micro_stats ( EEG ); % pop up window
 %   >> EEG = pop_micro_stats ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
-%  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-%  Microstate EEGlab toolbox: An introductionary guide.
+% Please cite this toolbox as:
+% Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
+% manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 % Inputs:
 %   EEG     - EEG-lab EEG structure (channels x samples (x epochs)) with

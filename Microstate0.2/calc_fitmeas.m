@@ -10,8 +10,8 @@
 %        ERP analyses: A step-by-step tutorial review. Brain Topography.
 %
 %  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-%  Microstate EEGlab toolbox: An introductionary guide.
+%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
+%  manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 %  Inputs:
 %  X       - EEG (channels x samples).

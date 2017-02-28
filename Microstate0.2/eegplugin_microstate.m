@@ -9,8 +9,8 @@
 %   catchstrs  - [struct] "catch" strings for menu callbacks.
 %
 % Please cite this toolbox as:
-% Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-% Microstate EEGlab toolbox: An introductionary guide.
+% Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
+% manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 % Author: Andreas Trier Poulsen, atpo@dtu.dk
 % Technical University of Denmark, Cognitive systems - February 2017
