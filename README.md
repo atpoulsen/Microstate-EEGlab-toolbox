@@ -4,5 +4,5 @@ Extention for EEGlab, enabling microstate analysis in Matlab. Includes full GUI 
 
 Please cite this toolbox as:
 
-Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
+Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished manuscript).
 Microstate EEGlab toolbox: An introductionary guide.
