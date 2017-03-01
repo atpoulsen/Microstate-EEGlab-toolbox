@@ -70,7 +70,7 @@ end;
 OUTEEG = EEG;
 
 % force average reference
-OUTEEG.data = OUTEEG.data - repmat(mean(OUTEEG.data,1),[size(OUTEEG.chanlocs,2),1,1]);
+OUTEEG.data = OUTEEG.data - repmat(mean(OUTEEG.data,1),[size(OUTEEG.data,1),1,1]);
 
 settings = check_settings(varargin);
 
