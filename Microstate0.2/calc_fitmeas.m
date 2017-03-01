@@ -1,6 +1,6 @@
 %CALC_FITMEAS calculates measures of fit.
 %
-%  OBS - Early untested version.
+%  Note - Early untested version.
 %
 %  Calculates measures of fit as defined in [1]. The notation has been
 %  adapted to be consistent with the rest of the Microstate EEGlab toolbox.

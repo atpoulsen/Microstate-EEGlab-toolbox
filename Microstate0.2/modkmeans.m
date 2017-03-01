@@ -1,7 +1,7 @@
 function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %MODKMEANS Modified K-means algorithm.
 %
-%  OBS - Early untested version.
+%  Note - Early untested version.
 %
 %  Implementation of the Modified K-means algorithm, with optional
 %  smoothing of segments as described in [1]. This implementation use the
