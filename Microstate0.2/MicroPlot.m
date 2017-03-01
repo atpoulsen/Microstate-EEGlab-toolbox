@@ -99,6 +99,7 @@ for t=1:settings.Nplots
         a.EdgeColor = colors(i,:);
         a.FaceColor = colors(i,:);
     end
+    xlim([min(time_axis) max(time_axis)])
     xlabel('Time (s)')
     ylabel('GFP')
 end
