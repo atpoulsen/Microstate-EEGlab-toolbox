@@ -1,5 +1,5 @@
 % [] = pop_selectNmicro(EEG,epoch)
-%  Select number of microstates to use. By default this function will plot
+%  Select active number of microstates. By default this function will plot
 %  a new figure with four measures of fit of the best segmentation for
 %  each number of microstates.
 %  The user can also directly define the active number of microstates
@@ -22,14 +22,17 @@
 %             EEG ms.labels
 %
 %  Optional input:
-%  'Nrange'      - The range of numbers of microstates to be displayed.
+%  'plot_range'  - The range of numbers of microstates to be displayed (as 
+%                  vector). If empty (default), measures for all microstate
+%                  numbers will be plotted.
 %  'Measures'    - Cell array of strings defining, which measures of fit to
 %                  plot. Can also be a single string. Default is 'ALL',
-%                  which plots all measures. Possible strings: 'KL', 'W',
-%                  'CV', 'GEV' and 'ALL'.
+%                  which plots all measures. Possible strings: 'CV', 'GEV', 
+%                  'W', 'KL' and 'ALL'.
 %  'do_subplots' - If set, the created figure will contain a subplot for
 %                  each measure of fit, instead of plotting all in one
 %                  plot. 1 for subplots, 0 for all in on plot (default).
+%                  NOT IMPLEMENTED YET.
 %  'Nmicro'      - If defined, this is made the active number of microstates
 %                  used. If this is set, no figure will be created. Is
 %                  empty by default. Can be an interger or empty.
@@ -70,12 +73,24 @@ if nargin < 1
     help selectNmicro;
     return;
 elseif nargin < 2
-    % pop-up
-    
+    % pop-up window in case no further input is given
+    settings = input_popup();
+    if strcmp(settings,'cancel')
+        return
+    end
+else
+    settings = check_settings(varargin, EEG);
 end;
+
 OUTEEG = EEG;
-settings = check_settings(varargin, EEG);
 Nmicro = settings.Nmicro;
+
+
+%% Subplots not implemented yet.
+if settings.do_subplots
+    disp('Subplots are not implemented yet. Will plot in same plot instead.')
+    settings.do_subplots = 0;
+end
 
 
 %% Check and ordering of selected measures of fit
@@ -120,17 +135,111 @@ end
 
 end
 
-% -------------- helper functions -------------- %
-function settings = check_settings(vargs, EEG)
-%% check settings
-% Checks settings given as optional inputs for MicroPlot.
-% Undefined inputs is set to default values.
-varg_check = {   'Measures'  {'string' 'cell'}  []  'ALL' ;
-    'Nrange' 'real' [] EEG.microstate.algorithm_settings.Nmicrostates;
-    'do_subplots' 'integer' [0 1] 0;
-    'Nmicro' 'integer' [] []};
-settings = finputcheck( vargs, varg_check);
-if ischar(settings), error(settings); end; % check for error
+% -------------- Pop-ups-------------- %
+function settings = input_popup()
+% Function for creating popup window to input algorithm settings
+%
+
+%% Create Inputs for popup
+% Title string
+info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
+info_str2 = 'are welcome at atpo@dtu.dk.';
+line.info = { {'Style' 'text' 'string' info_str1} ...
+    {'Style' 'text' 'string' info_str2} {} };
+geo.info = {1 1 1};
+
+
+% plot_range
+style.plot_range = 'edit';
+line.plot_range = { {'Style' 'text' 'string' 'Number of microstates to plot:'}, ...
+    {'Style' style.plot_range 'string' '' 'tag' 'plot_range'},... %end of first line
+    {'Style' 'text' 'string' '(If empty; entire range will be plotted).'},...
+    {} }; %end of second line
+geo.plot_range = {[1 .3] [1 .3]};
+
+% Measures title string
+meas_str = 'Measures of fit to be plotted:';
+line.meastitle = { {} {'Style' 'text' 'string' meas_str} };
+geo.meastitle = {1 .3};
+
+% CV
+style.CV = 'checkbox';
+CV_tipstr = 'Cross validation criterion.';
+line.CV = { {'Style' style.CV 'value' 1 'string' 'CV' ...
+    'tooltipstring' CV_tipstr 'tag' 'CV'} {} };
+geo.CV = {[1 1]};
+
+% GEV
+style.GEV = 'checkbox';
+GEV_tipstr = 'Global explained variance.';
+line.GEV = { {'Style' style.GEV 'value' 1 'string' 'GEV' ...
+    'tooltipstring' GEV_tipstr 'tag' 'GEV'} {} };
+geo.GEV = {[1 1]};
+
+% W
+style.W = 'checkbox';
+W_tipstr = 'Dispersion.';
+line.W = { {'Style' style.W 'value' 1 'string' 'W' ...
+    'tooltipstring' W_tipstr 'tag' 'W'} {} };
+geo.W = {[1 1]};
+
+% KL
+style.KL = 'checkbox';
+KL_tipstr = 'Krzanowski-Lai criterion.';
+line.KL = { {'Style' style.KL 'value' 1 'string' 'KL' ...
+    'tooltipstring' KL_tipstr 'tag' 'KL'} {} };
+geo.KL = {[1 1]};
+
+% Do subplot?
+style.do_subplots = 'checkbox';
+sub_tipstr = 'Plot measures on seperate subplots?';
+line.do_subplots = { {'Style' style.do_subplots 'value' 0 'string'...
+    'Subplots?' ...
+    'tooltipstring' sub_tipstr 'tag' 'do_subplots'} {} };
+geo.do_subplots = {[1 1]};
+
+% Nmicro
+style.Nmicro = 'edit';
+line.Nmicro = { {'Style' 'text' 'string' 'Select active number of microstates:'}, ...
+    {'Style' style.Nmicro 'string' '' 'tag' 'Nmicro'},... %end of first line
+    {'Style' 'text' 'string' '(If set; no figure will be created).'},...
+    {} }; %end of second line
+geo.Nmicro = {[1 .3] [1 .3]};
+
+%% Order inputs for GUI
+geometry = [geo.info geo.plot_range geo.meastitle geo.CV geo.GEV geo.W ...
+    geo.KL {1} geo.do_subplots {1} geo.Nmicro];
+uilist = [line.info line.plot_range line.meastitle line.CV line.GEV line.W ...
+    line.KL {{}} line.do_subplots {{}} line.Nmicro];
+% geometry = [geo.info geo.plot_range ]%geo.meastitle geo.CV geo.GEV geo.W];% ...
+% %     geo.KL {1} geo.do_subplots geo.Nmicro];
+% uilist = [line.info line.plot_range ]%line.meastitle line.CV line.GEV line.W];% ...
+% %     line.KL {{}} line.do_subplots line.Nmicro];
+
+
+%% Create Popup
+[~,~,~,pop_out] = inputgui( geometry, uilist, ...
+    'pophelp(''pop_selectNmicro'');', 'Select active number of microstates -- pop_selectNmicro()');
+
+
+%% Interpret output from popup
+if isstruct(pop_out)
+    settings = struct;
+    settings = interpret_popup(pop_out, settings, style);
+    
+    % Save selected measures of fit in Measures
+    all_measures = {'CV', 'GEV', 'W', 'KL'};
+    settings.Measures = {};
+    for m = 1:length(all_measures)
+        if settings.(all_measures{m})
+            settings.Measures{end+1} = all_measures{m};
+        end
+        settings = rmfield(settings, all_measures{m}); % removing field from settings
+    end
+else
+    settings = 'cancel';
+end
+
 end
 
 function Nmicro = fitmeas_popup(EEG, Measures, settings)
@@ -138,6 +247,11 @@ function Nmicro = fitmeas_popup(EEG, Measures, settings)
 % select number of microstates.
 Nmeas = length(Measures);
 Nmicro = 'cancel'; % if user presses cancel button.
+if isempty(settings.plot_range)
+    plot_range = EEG.microstate.algorithm_settings.Nmicrostates;
+else
+    plot_range = settings.plot_range;
+end
 
 
 %% Create figure
@@ -145,11 +259,11 @@ h = figure('Units', 'normalized','position',[.2 .2 .6 .6], 'Visible','off');
 if settings.do_subplots
     for m = 1:Nmeas
         subplot(Nmeas+1,1,m)
-        MicroPlotFitmeas(EEG.microstate.Res, {Measures{m}}, settings.Nrange)
+        MicroPlotFitmeas(EEG.microstate.Res, {Measures{m}}, plot_range)
     end
 else
     subplot('position',[0.1 .3 .85 .65])
-    MicroPlotFitmeas(EEG.microstate.Res, Measures, settings.Nrange)
+    MicroPlotFitmeas(EEG.microstate.Res, Measures, plot_range)
 end
 
 
@@ -168,20 +282,55 @@ btn_cancel = uicontrol('Style', 'pushbutton', 'String', 'Cancel',...
     'Units', 'normalized', 'Position', [.69 .1 .1 .04],...
     'Callback', callback_cancel);
 
-% callback_ok = 'handles=guidata(gcf); eval(''Nmicro = get( handles.Nmicro_edit, ''string'')''); close(gcf)';
-% callback_ok = 'close(gcf)';
 callback_ok = 'set(gcbo, ''userdata'', 1);';
 btn_ok = uicontrol('Style', 'pushbutton', 'String', 'OK',...
     'Units', 'normalized', 'Position', [.8 .1 .1 .04],...
     'tag', 'ok', 'Callback', callback_ok);
 
 set(h,'Visible','on');
-% guidata(h,handles); % to be able to access Nmicro_edit, when callin from within a function
 waitfor( findobj('parent', h, 'tag', 'ok'), 'userdata');
+
 Nmicro = eval(get(Nmicro_edit, 'string'));
-
-
 close(h);
 
 
 end
+
+% -------------- helper functions -------------- %
+function settings = interpret_popup(pop_out, settings, style, popmenu)
+% Interpret output from pop_up window, "pop_out", and arrange it in
+% "settings" struct. The fields in "style" should be the same as in "pop_out"
+% (defined as tags in inputgui.m). The struct popmenu is optional and only
+% needed if popmenus are used in the pop_up window.
+
+names = fieldnames(style);
+for i = 1:length(names)
+    switch style.(names{i})
+        case 'edit'
+            if isempty(pop_out.(names{i})) % empty?
+                settings.(names{i}) = [];
+            else
+                settings.(names{i}) = eval(pop_out.(names{i}));
+            end
+        case 'checkbox'
+            settings.(names{i}) = pop_out.(names{i});
+        case 'popupmenu'
+            settings.(names{i}) = popmenu.(names{i}){pop_out.(names{i})};
+    end
+end
+
+end
+
+function settings = check_settings(vargs)
+%% check settings
+% Checks settings given as optional inputs for MicroPlot.
+% Undefined inputs is set to default values.
+varg_check = {   'Measures'  {'string' 'cell'}  []  'ALL' ;
+    'plot_range' 'real' [] [];
+    'do_subplots' 'integer' [0 1] 0;
+    'Nmicro' 'integer' [] []};
+settings = finputcheck( vargs, varg_check);
+if ischar(settings), error(settings); end; % check for error
+end
+
+
