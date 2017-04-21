@@ -6,8 +6,8 @@
 %  Note - Early untested version.
 %
 %  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
-%  manuscript). Microstate EEGlab toolbox: An introductionary guide.
+%  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
+%  Microstate EEGlab toolbox: An introductionary guide.
 % 
 %  Inputs
 %  EEG              - EEG-lab EEG structure with EEG.data (channels x time (x trials)).
@@ -70,7 +70,7 @@ end;
 OUTEEG = EEG;
 
 % force average reference
-OUTEEG.data = OUTEEG.data - repmat(mean(OUTEEG.data,1),[size(OUTEEG.data,1),1,1]);
+OUTEEG.data = OUTEEG.data - repmat(mean(OUTEEG.data,1),[size(OUTEEG.chanlocs,2),1,1]);
 
 settings = check_settings(varargin);
 
@@ -161,6 +161,11 @@ if settings.sequentialize == 1
         seq(t,k+1) = seq(t,k);
         msFirstTF(t,k+1) = msFirstTF(t,k);
     end
+else
+    % this needs to be done for the transition probabilities
+    if size(EEG.data,3)  > 1
+        bestLabel = reshape(bestLabel,size(EEG.data,2),size(EEG.data,3))';
+    end
 end
 % % quick plot to check
 % subplot(3,1,1)
@@ -170,19 +175,14 @@ end
 % subplot(3,1,3)
 % area(msFirstTF(1,:))
 
+
+
+
 %% MS Order (for transition probabilities in MicroPara)
 if settings.getorder == 1
-    order = [];
+    order = {};
     for t = 1:size(bestLabel,1)
-        first = 1;
-        r = 1;
-        for k = 1:size(bestLabel,2)-1
-            if bestLabel(t,k) ~= bestLabel(t,k+1)
-                order(t,r) = bestLabel(t,k)  ;
-                r = r + 1;
-            else
-            end
-        end
+        [order{t,1}, ~ ] = my_RLE(bestLabel(t,:));
     end
 end
 
@@ -209,7 +209,7 @@ if size(EEG.data,3)  == 1
     
 else
     OUTEEG.microstate.fit.mslabels = reshape(label,size(label,1),size(EEG.data,2),size(EEG.data,3));
-    OUTEEG.microstate.fit.bestLabel = bestLabel;
+    OUTEEG.microstate.fit.bestLabel = bestLabel ;
     OUTEEG.microstate.fit.gmd = squeeze(reshape(GMD,size(GMD,1),size(EEG.data,2),size(EEG.data,3)));
     OUTEEG.microstate.fit.spatCorr = SpatCorr;
     OUTEEG.microstate.fit.GFP = GFP;

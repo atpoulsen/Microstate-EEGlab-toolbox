@@ -1,4 +1,7 @@
-% [] = pop_selectNmicro(EEG,epoch)
+% [] = pop_selectNmicro() - Select active number of microstates.
+%   
+%   Note - Early untested version.
+%
 %  Select active number of microstates. By default this function will plot
 %  a new figure with four measures of fit of the best segmentation for
 %  each number of microstates.
@@ -19,7 +22,7 @@
 %
 %  Inputs
 %  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
-%             EEG ms.labels
+%             EEG.microstate field.
 %
 %  Optional input:
 %  'plot_range'  - The range of numbers of microstates to be displayed (as 
@@ -68,18 +71,25 @@
 function [OUTEEG, com] = pop_selectNmicro(EEG,varargin)
 %% Error check and initialisation
 com = '';
+OUTEEG = [];
 
 if nargin < 1
     help selectNmicro;
     return;
-elseif nargin < 2
+end
+% check whether necessary microstate substructures exist.
+if ~isfield(EEG,'microstate')
+   error('No microstate data present. Run microstate segmentation first.') 
+end
+    
+if nargin < 2
     % pop-up window in case no further input is given
     settings = input_popup();
     if strcmp(settings,'cancel')
         return
     end
 else
-    settings = check_settings(varargin, EEG);
+    settings = check_settings(varargin);
 end;
 
 OUTEEG = EEG;
@@ -192,10 +202,11 @@ geo.KL = {[1 1]};
 
 % Do subplot?
 style.do_subplots = 'checkbox';
-sub_tipstr = 'Plot measures on seperate subplots?';
+% sub_tipstr = 'Plot measures on seperate subplots?';
 line.do_subplots = { {'Style' style.do_subplots 'value' 0 'string'...
-    'Subplots?' ...
-    'tooltipstring' sub_tipstr 'tag' 'do_subplots'} {} };
+    'Plot measures on seperate subplots?' ...
+    'tag' 'do_subplots'} {} };
+%     'tooltipstring' sub_tipstr 'tag' 'do_subplots'} {} };
 geo.do_subplots = {[1 1]};
 
 % Nmicro
@@ -273,11 +284,11 @@ Nmicro_txt = uicontrol('Style','text','Units', 'normalized',...
     'String','No. of microstates: ');
 Nmicro_edit = uicontrol('Style','edit', 'Units', 'normalized',...
     'Position',[.51 .15 .05 .04], 'HorizontalAlignment', 'left',...
-    'BackgroundColor', [1 1 1], 'String','  4  ');
+    'BackgroundColor', [1 1 1], 'String', ['  ' num2str(EEG.microstate.Res.K_act)]);
 
 
 %% Buttons
-callback_cancel = 'close(gcf), return';
+callback_cancel = 'close gcbf';
 btn_cancel = uicontrol('Style', 'pushbutton', 'String', 'Cancel',...
     'Units', 'normalized', 'Position', [.69 .1 .1 .04],...
     'Callback', callback_cancel);
@@ -289,6 +300,8 @@ btn_ok = uicontrol('Style', 'pushbutton', 'String', 'OK',...
 
 set(h,'Visible','on');
 waitfor( findobj('parent', h, 'tag', 'ok'), 'userdata');
+
+if ~(ishandle(h)), return; end % Check if figure still exist
 
 Nmicro = eval(get(Nmicro_edit, 'string'));
 close(h);

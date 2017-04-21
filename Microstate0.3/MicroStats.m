@@ -5,8 +5,8 @@
 %  Note - Early untested version.
 %
 %  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
-%  manuscript). Microstate EEGlab toolbox: An introductionary guide.
+%  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
+%  Microstate EEGlab toolbox: An introductionary guide.
 %
 %  Inputs:
 %  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
@@ -78,17 +78,11 @@ MOcc=zeros(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
 TCov=zeros(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
 GEV = nan(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
 MspatCorr = nan(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
-
+GFP = OUTEEG.microstate.fit.GFP(:,settings.epoch);
 
 
 %% For each MS class...
 for ms = 1:size(OUTEEG.microstate.fit.MStemplate,2)
-    if size(OUTEEG.data,3) > 1;
-        GFP = squeeze(std(OUTEEG.data(:,settings.epoch,:),[],1))';
-    else
-        GFP = std(OUTEEG.data(:,settings.epoch),[],1);
-    end
-    
     for t = 1:size(OUTEEG.data,3)
         
         % Mean GFP
@@ -120,7 +114,7 @@ end
 
 %% Transition Probabilities (as with hmmestimate(states,states);)
 for t = 1:size(OUTEEG.microstate.fit.order,1)
-    states = OUTEEG.microstate.fit.order(t,:);
+    states = OUTEEG.microstate.fit.order{t,:};
     states = states(states ~= 0);
     % prepare output matrix
     numStates = size(OUTEEG.microstate.fit.MStemplate,2);
@@ -156,7 +150,7 @@ if size(OUTEEG.data,3) > 1;
     OUTEEG.microstate.stats.avgs.Coverage = nanmean(TCov,1);
     OUTEEG.microstate.stats.avgs.GEV = nanmean(GEV,1);
     OUTEEG.microstate.stats.avgs.MspatCorr = nanmean(MspatCorr,1);
-    OUTEEG.microstate.stats.avgs.TP = nanmean(TP,3);
+    
     % standard deviation of parameters
     OUTEEG.microstate.stats.avgs.stdGfp = nanstd(MGFP,1);
     OUTEEG.microstate.stats.avgs.stdOccurence = nanstd(MOcc,1);
@@ -164,7 +158,6 @@ if size(OUTEEG.data,3) > 1;
     OUTEEG.microstate.stats.avgs.stdCoverage = nanstd(TCov,1);
     OUTEEG.microstate.stats.avgs.stdGEV = nanstd(GEV,1);
     OUTEEG.microstate.stats.avgs.stdMspatCorr = nanstd(MspatCorr,1);
-    OUTEEG.microstate.stats.avgs.stdTP = nanstd(TP,[],3);
 end
 end
 

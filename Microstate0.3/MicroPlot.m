@@ -89,7 +89,7 @@ for t=1:settings.Nplots
     hold on
     for i=unique(Label(t,:))
         x = nan(1,Nsamples);
-        idx = Label(t,:) == i; % finding indices where microstate is active
+        idx = Label(t,:) == i; % finding indices where microstate is active.
         % adding one sample to start of each segment to avoid white holes
         % between segments.
         idx = [idx(2:end) false] | idx; 

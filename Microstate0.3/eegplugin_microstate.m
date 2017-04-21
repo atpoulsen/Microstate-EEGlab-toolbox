@@ -12,8 +12,15 @@
 % Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
 % manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
-% Author: Andreas Trier Poulsen, atpo@dtu.dk
-% Technical University of Denmark, Cognitive systems - February 2017
+% Authors:
+% Andreas Trier Poulsen, atpo@dtu.dk
+% Technical University of Denmark, DTU Compute, Cognitive systems.
+%
+% Andreas Pedroni, andreas.pedroni@uzh.ch
+% University of Zürich, Psychologisches Institut, Methoden der
+% Plastizitätsforschung. 
+%
+% April 2017.
 %
 % See also: eeglab
 
@@ -43,13 +50,13 @@ end
 toolsmenu = findobj(fig, 'tag', 'tools');
 submenutools = uimenu( toolsmenu, 'label', 'Microstate analysis', 'separator', 'on');
 
-% Plot menu
-plotmenu = findobj(fig, 'tag', 'plot');
-submenuplot = uimenu( plotmenu, 'label', 'Microstate analysis', 'separator', 'on');
+% % Plot menu
+% plotmenu = findobj(fig, 'tag', 'plot');
+% submenuplot = uimenu( plotmenu, 'label', 'Microstate analysis', 'separator', 'on');
 
 
-%% Menu callback commands for submenus
-% Tools submenus
+%% Menu callback commands for submenu
+% Analysis functions
 complaceholder = 'error(''sorry function not implemented yet. This is just a placeholder'');';
 comdata = [trystrs.no_check complaceholder catchstrs.store_and_hist];
 comsegment_simple = [trystrs.no_check complaceholder catchstrs.store_and_hist];
@@ -57,10 +64,12 @@ comsegment_advanced = [trystrs.no_check '[EEG LASTCOM]=pop_micro_segment(EEG);' 
     catchstrs.store_and_hist];
 combackfit = [trystrs.no_check '[EEG LASTCOM]=pop_micro_fit(EEG);' ...
     catchstrs.store_and_hist];
+comselect = [trystrs.no_check '[EEG LASTCOM]=pop_selectNmicro(EEG);' ...
+    catchstrs.store_and_hist];
 comstats = [trystrs.no_check '[EEG LASTCOM]=pop_micro_stats(EEG);' ...
     catchstrs.store_and_hist];
 
-% Plot submenus
+% Plot functions
 scalp_str = 'LASTCOM = [''figure;topo_micro(EEG.microstate.scalp_maps,EEG.chanlocs);'']; eval(LASTCOM);';
 complotscalp = [trystrs.no_check scalp_str catchstrs.store_and_hist];
 complotseg = [trystrs.no_check '[EEG,LASTCOM] = pop_micro_plotseg(EEG);' ...
@@ -68,25 +77,32 @@ complotseg = [trystrs.no_check '[EEG,LASTCOM] = pop_micro_plotseg(EEG);' ...
 
 
 %% Create Tools submenus
-% Simples segmentation
+% Simple segmentation options
 uimenu( submenutools, 'Label', 'Segment into microstates (Quick start) (placeholder)',...
     'CallBack', comsegment_simple);
 
-% Advanced segmentation
+% Advanced segmentation options
 uimenu( submenutools, 'Label', 'Select data for analysis (advanced settings) (placeholder)', ...
     'CallBack', comdata,'separator', 'on');
 uimenu( submenutools, 'Label', 'Segment into microstates (advanced settings)', ...
     'CallBack', comsegment_advanced);
 
 % Post segmentation
+uimenu( submenutools, 'Label', 'Select active number of microstates', ...
+    'CallBack', comselect,'separator', 'on');
 uimenu( submenutools, 'Label', 'Backfit microstates on EEG', ...
-    'CallBack', combackfit,'separator', 'on');
+    'CallBack', combackfit);
 uimenu( submenutools, 'Label', 'Calculate microstate statistics', ...
     'CallBack', comstats);
 
+% Plot functions
+uimenu( submenutools, 'Label', 'Plot microstates scalp topographies', 'CallBack',...
+    complotscalp,'separator', 'on');
+uimenu( submenutools, 'Label', 'Plot microstate segmentations','CallBack', complotseg);
 
-%% Create Plot submenus
-uimenu( submenuplot, 'Label', 'Plot microstates scalp topographies', 'CallBack', complotscalp);
-uimenu( submenuplot, 'Label', 'Plot microstate segmentation','CallBack', complotseg);
+
+% %% Create Plot submenus
+% uimenu( submenuplot, 'Label', 'Plot microstates scalp topographies', 'CallBack', complotscalp);
+% uimenu( submenuplot, 'Label', 'Plot microstate segmentation','CallBack', complotseg);
 
 end

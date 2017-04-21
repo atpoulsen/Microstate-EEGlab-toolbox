@@ -29,7 +29,7 @@
 %                         vector then each value will be tested and the
 %                         optimum number of microstates selected based on
 %                         measures of fit (default: 3:8).
-%  'sorting'               - Method of sorting microstates. ['Global explained
+%  'sorting'            - Method of sorting microstates. ['Global explained
 %                         variance'|'Chronological appearance'|'Frequency']
 %                         (default: 'Global explained variance').
 %  'verbose'            - Print status messages to command window?

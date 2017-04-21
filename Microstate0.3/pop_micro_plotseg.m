@@ -2,21 +2,30 @@
 %
 %  Note - Early untested version.
 %
+% EEGlab pop function for plotting with Microstate segments over the GFP,
+% with a colour for each Microstate. Optionally the microstate numbers over
+% each segment and the topographical microstate maps can by plotted.
+% Calls the function MicroPlotSegments(). See this for more information. 
+% 
 % Usage:
 %   >> pop_micro_plotseg ( EEG ); % pop up window
 %   >> pop_micro_plotseg ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
-% Please cite this toolbox as:
-% Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
-% manuscript). Microstate EEGlab toolbox: An introductionary guide.
+%  Please cite this toolbox as:
+%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
+%  manuscript). Microstate EEGlab toolbox: An introductionary guide.
+% 
+%  Inputs
+%  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
+%             the fields 'data', 'times', 'srate' and 'chanlocs'; and the 
+%             'labels' and 'scalp_maps' fields in EEG.microstates.
 %
-% Inputs:
-%   EEG        - EEG-lab EEG structure (channels x samples (x epochs)) with
-%                .microstate.fit.bestLabel (created by MicroFit.m)
-%
-% Optional inputs:
-%  'epoch'     - timewindow of analysis (vector of timeframes).
-%  'Nplots'    - number of subplots. Has to be <= size(EEG.data,3)
+%  Optional input:
+%  'plotsegnos' - Plot Microstate numbers above microstate segments?
+%                 'first' (default) plots a number over the first segment
+%                 for each microstate, 'all' plots over all segments.
+%                 'none' means no numbers are plotted.
+%  'plottopos'  - Plot topography of microstates? 1, yes (default); 0, no.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk
@@ -26,7 +35,7 @@
 % University of Zürich, Psychologisches Institut, Methoden der
 % Plastizitätsforschung. 
 %
-% February 2017.
+% April 2017.
 %
 % See also: eeglab
 
@@ -57,48 +66,39 @@ end;
 if ~isfield(EEG,'microstate')
    error('No microstate data present. Run microstate segmentation first.') 
 end
-if ~isfield(EEG.microstate,'fit')
-   error('No microstate fitting info present. Run microstate fit first.') 
-end
-
 com = '';
 
 
 %% pop-up window in case no further input is given
 if nargin < 2
-    settings = plotseg_popup();
+    settings = input_popup();
     if strcmp(settings,'cancel')
         return
     end
+    popup_called = 1;
 else
     settings = check_settings(varargin,EEG);
-end
-
-%% Remove empty fields in settings
-names = fieldnames(settings);
-for n = 1:length(names)
-    if isempty(settings.(names{n}))
-        % removing epoch field if empty
-        settings = rmfield(settings,names{n});
-    end
+    popup_called = 0;
 end
 
 
 %% Define command string
-com = sprintf('MicroPlot( %s', inputname(1));
+if popup_called
+    com = sprintf('figure;MicroPlotSegments( %s', inputname(1));
+else
+    com = sprintf('MicroPlotSegments( %s', inputname(1));
+end
 com = settings_to_string(com,settings);
 com = [com ' );'];
 
 
 %% Run microstate fitting by evaluating com-string
-disp('Plotting microstate segments over the GFP...')
 eval(com)
 
 end
 
-% ------------------------------ Pop-up ---------------------------------%
-function settings = plotseg_popup()
-% Function for creating popup window to input settings
+function settings = input_popup()
+% Function for creating popup window to input algorithm settings
 %
 
 %% Create Inputs for popup
@@ -109,57 +109,46 @@ line.info = { {'Style' 'text' 'string' info_str1} ...
     {'Style' 'text' 'string' info_str2} {} };
 geo.info = {1 1 1};
 
+% Plot segment numbers?
+style.plotsegnos = 'popupmenu';
+popmenu.plotsegnos = {'first' 'all' 'none'};
+segno_str = popmenu.plotsegnos{1}; %string for popupmenu
+for seg = 2:length(popmenu.plotsegnos); segno_str = [segno_str '|' popmenu.plotsegnos{seg}]; end;
+line.plotsegnos = { {'Style' 'text' 'string' 'Plot microstate numbers above segments:'}, ...
+    {'Style' style.plotsegnos 'string' segno_str 'tag' 'plotsegnos' 'value' 1} };
+geo.plotsegnos = {[1 1]};
 
-% Epoch
-style.epoch = 'edit';
-epoch_tipstr = 'Vector of timeframes. Leave empty to use entire range.';
-line.epoch = { {'Style' 'text' 'string' 'Timewindow of analysis', ...
-    'tooltipstring' epoch_tipstr}, ...
-    {'Style' style.epoch 'string' '' 'tag' 'epoch'} };
-geo.epoch = {[1 .2]};
-
-% Nplots
-style.Nplots = 'edit';
-plot_tipstr = 'Has to be <= size(EEG.data,3). Leave empty to set to size(EEG.data,3).';
-line.Nplots = { {'Style' 'text' 'string' 'Number of subplots', ...
-    'tooltipstring' plot_tipstr}, ...
-    {'Style' style.Nplots 'string' '' 'tag' 'Nplots'} };
-geo.Nplots = {[1 .2]};
+% Plot topographies?
+style.plottopos = 'checkbox';
+line.plottopos = { {'Style' style.plottopos 'value' 1 'string' 'Plot microstate topographies.' ...
+    'tag' 'plottopos'} {} };
+geo.plottopos = {[1 1]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.epoch geo.Nplots];
-uilist = [line.info line.epoch line.Nplots];
+geometry = [geo.info geo.plotsegnos geo.plottopos];
+uilist = [line.info line.plotsegnos line.plottopos];
 
 
 %% Create Popup
-[~,~,~,pop_out] = inputgui( geometry, uilist, 'pophelp(''pop_micro_plotseg'');',...
-    'plots microstate segments over the GFP -- pop_micro_plotseg()');
- 
+[~,~,~,pop_out] = inputgui( geometry, uilist, ...
+    'pophelp(''pop_micro_plotseg'');', ...
+    'Draw Microstate segments over the GFP -- pop_micro_plotseg()');
+
 
 %% Interpret output from popup
 if isstruct(pop_out)
     settings = struct;
-    settings = interpret_popup(pop_out, settings, style);
+    settings = interpret_popup(pop_out, settings, style, popmenu);
+    
 else
     settings = 'cancel';
 end
-end
-% ----------------------------------------------------------------------- %
 
-% -------------------------- Helper functions --------------------------- %
-function settings = check_settings(vargs, EEG)
-%% check settings
-% Checks settings given as optional inputs for MicroPlot.
-% Undefined inputs is set to default values.
-varg_check = {   'epoch'  'integer'    []         1:size(EEG.data,2) ;
-    'Nplots' 'integer' [] size(EEG.microstate.fit.bestLabel,1)};
-settings = finputcheck( vargs, varg_check);
-if ischar(settings), error(settings); end; % check for error
 end
 
+% -------------- helper functions -------------- %
 function settings = interpret_popup(pop_out, settings, style, popmenu)
-%%
 % Interpret output from pop_up window, "pop_out", and arrange it in
 % "settings" struct. The fields in "style" should be the same as in "pop_out"
 % (defined as tags in inputgui.m). The struct popmenu is optional and only
@@ -181,6 +170,16 @@ for i = 1:length(names)
     end
 end
 
+end
+
+function settings = check_settings(vargs)
+%% check settings
+% Checks settings given as optional inputs for MicroPlot.
+% Undefined inputs is set to default values.
+varg_check = {   'plotsegnos'  'string' []  'all' ;
+    'plottopos' 'integer' [] 1};
+settings = finputcheck( vargs, varg_check);
+if ischar(settings), error(settings); end; % check for error
 end
 
 function com = settings_to_string(com,settings)
