@@ -11,7 +11,7 @@
 % manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 % Inputs:
-%   EEG             - EEG-lab EEG structure.
+%   EEG             - EEGlab EEG structure.
 %
 % Optional inputs:
 %  'minTF'          - Redristibute segments smaller than minTF to the next

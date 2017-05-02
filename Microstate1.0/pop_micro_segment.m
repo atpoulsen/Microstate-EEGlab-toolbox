@@ -9,15 +9,15 @@
 % in [3,4].
 %
 % Usage:
-%   >> OUTEEG = pop_micro_segment ( INEEG ); % pop up window
-%   >> OUTEEG = pop_micro_segment ( INEEG, 'key1', 'val1', 'key2', 'val2' ... )
+%   >> EEG = pop_micro_segment ( EEG ); % pop up window
+%   >> EEG = pop_micro_segment ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
 %  manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 % Inputs:
-%   INEEG - Input dataset.
+%   EEG - Input dataset.
 %
 % Optional inputs:
 %  'algorithm'          - String denoting the algorithm used for
@@ -78,7 +78,7 @@
 %                      in noise variance (default: 1e-6).
 %
 % Outputs:
-%   OUTEEG - Output dataset. This function saves output in the substruct 
+%   EEG    - Output dataset. This function saves output in the substruct 
 %            OUTEEG.microstate, which contains info general and algorithm-
 %            specific settings as well as the results of segemntation. The
 %            .Res substruct contains algorithm specific results. See the
@@ -124,15 +124,15 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [OUTEEG, com] = pop_micro_segment(EEG, varargin)
+function [EEG, com] = pop_micro_segment(EEG, varargin)
 %% Error check and initialisation
-OUTEEG = EEG;
 com = '';
 
 if nargin < 1
     help pop_micro_segment;
     return;
 end;
+INEEG = EEG;
 
 
 %% pop-up window in case no further input is given
@@ -150,13 +150,13 @@ end
 
 
 %% Write settings to OUTEEG (overwrites any previous microstate info )
-OUTEEG.microstate = settings;
+EEG.microstate = settings;
 
 
 %% Normalise EEG
 if settings.normalise
     % normalising by average channel std.
-    EEG.data = EEG.data./mean(std(EEG.data,0,2));
+    INEEG.data = INEEG.data./mean(std(INEEG.data,0,2));
 end
 
 
@@ -175,8 +175,8 @@ switch settings.algorithm
         K_range = settings.algorithm_settings.Nmicrostates;
         
         % running algorithm
-        [OUTEEG.microstate.scalp_maps, OUTEEG.microstate.labels, ...
-            OUTEEG.microstate.Res] = modkmeans(EEG.data, K_range, opts);
+        [EEG.microstate.scalp_maps, EEG.microstate.labels, ...
+            EEG.microstate.Res] = modkmeans(INEEG.data, K_range, opts);
         
         sort_names_opt = {};
         
@@ -194,15 +194,15 @@ switch settings.algorithm
         K_range = settings.algorithm_settings.Nmicrostates;
         
         % running algorithm
-        [OUTEEG.microstate.scalp_maps, OUTEEG.microstate.labels, ...
-            OUTEEG.microstate.Res] = varMicro(EEG.data, K_range, opts);
+        [EEG.microstate.scalp_maps, EEG.microstate.labels, ...
+            EEG.microstate.Res] = varMicro(INEEG.data, K_range, opts);
         
         % Res variables that should sorted alongside scalp_maps and labels.
         sort_names_opt = {'S_opt', 'sig2_z_opt'};
         
     case 'K-means'
         % starting K-merans using subfunction
-        OUTEEG = run_kmeans(EEG.data,OUTEEG,settings);
+        EEG = run_kmeans(INEEG.data,EEG,settings);
         
         % Res variables that should sorted alongside scalp_maps and labels.
         sort_names_opt = {};
@@ -213,17 +213,17 @@ end
 
 
 %% Calculate measures of fit
-[KL, W, CV, GEV] = calc_fitmeas(EEG.data, OUTEEG.microstate.Res.A_all, ...
-    OUTEEG.microstate.Res.L_all);
+[KL, W, CV, GEV] = calc_fitmeas(INEEG.data, EEG.microstate.Res.A_all, ...
+    EEG.microstate.Res.L_all);
 
-OUTEEG.microstate.Res.KL = KL;
-OUTEEG.microstate.Res.W = W;
-OUTEEG.microstate.Res.CV = CV;
-OUTEEG.microstate.Res.GEV = GEV;
+EEG.microstate.Res.KL = KL;
+EEG.microstate.Res.W = W;
+EEG.microstate.Res.CV = CV;
+EEG.microstate.Res.GEV = GEV;
 
 
 %% Sorting microstates according to chosen method
-OUTEEG = sort_microstates(EEG.data,OUTEEG,sort_names_opt);
+EEG = sort_microstates(INEEG.data,EEG,sort_names_opt);
 
 
 %% Define command string
@@ -662,7 +662,7 @@ for i = 1:size(names,1)
 end
 end
 
-function OUTEEG = run_kmeans(X,OUTEEG,settings)
+function EEG = run_kmeans(X,EEG,settings)
 % Runs K-means clustering using Matlabs standard implementation.
 %
 
@@ -717,8 +717,8 @@ for K = K_range
     
     % Saving optimum solution amongst different values of K
     if MSE_mcv(K_ind) < MSE_mcv_opt
-        OUTEEG.microstate.scalp_maps = A;
-        OUTEEG.microstate.labels = L;
+        EEG.microstate.scalp_maps = A;
+        EEG.microstate.labels = L;
         MSE_mcv_opt = MSE_mcv(K_ind);
         K_act = K;
     end
@@ -727,11 +727,11 @@ end
 
 
 %% Saving to Res struct
-OUTEEG.microstate.Res.K_act = K_act;
-OUTEEG.microstate.Res.A_all = A_all;
-OUTEEG.microstate.Res.L_all = L_all;
-OUTEEG.microstate.Res.MSE = MSE;
-OUTEEG.microstate.Res.MSE_mcv = MSE_mcv;
+EEG.microstate.Res.K_act = K_act;
+EEG.microstate.Res.A_all = A_all;
+EEG.microstate.Res.L_all = L_all;
+EEG.microstate.Res.MSE = MSE;
+EEG.microstate.Res.MSE_mcv = MSE_mcv;
 
 
 end
@@ -832,7 +832,7 @@ end
 
 end
 
-function OUTEEG = sort_microstates(X, OUTEEG, sort_names_opt)
+function EEG = sort_microstates(X, EEG, sort_names_opt)
 % Sorting microstates according to chosen method. GFP and GEV is
 % implemented as descibed in [3]. Sorting Z_all, A_all and L_all (from Res.)
 % as default, looping over all K in K_range. scalp_maps, labels are also
@@ -840,12 +840,12 @@ function OUTEEG = sort_microstates(X, OUTEEG, sort_names_opt)
 % L_all{K_act}. Variables defined in sort_names_opt are sorted for K_act 
 % (variables needs to have K as its first dimension).
 
-if OUTEEG.microstate.algorithm_settings.verbose
-    fprintf('Sorting microstates using %s \n',OUTEEG.microstate.sorting)
+if EEG.microstate.algorithm_settings.verbose
+    fprintf('Sorting microstates using %s \n',EEG.microstate.sorting)
 end
 
 %% Reading settings
-K_range = OUTEEG.microstate.algorithm_settings.Nmicrostates;
+K_range = EEG.microstate.algorithm_settings.Nmicrostates;
 
 
 %% Looping over K_range
@@ -854,8 +854,8 @@ for K = K_range
     K_ind = K_ind + 1;
     
     % Assigning A and L
-    A = OUTEEG.microstate.Res.A_all{K_ind};
-    L = OUTEEG.microstate.Res.L_all{K_ind};
+    A = EEG.microstate.Res.A_all{K_ind};
+    L = EEG.microstate.Res.L_all{K_ind};
     
     % check to see if a solution was found, otherwise skipping
     if isempty(A)
@@ -863,7 +863,7 @@ for K = K_range
     end
     
     %% Calculating chosen sorting measure
-    switch OUTEEG.microstate.sorting
+    switch EEG.microstate.sorting
         case 'Global explained variance'
             meas_name = 'GEVk';
             sort_method = 'descend';
@@ -900,32 +900,32 @@ for K = K_range
     [sortmeas,idx] = sort(sortmeas,sort_method);
     
     % Saving to sorting measure to OUTEEG
-    OUTEEG.microstate.Res.(meas_name){K_ind} = sortmeas;
+    EEG.microstate.Res.(meas_name){K_ind} = sortmeas;
     
     % Scalp maps
-    OUTEEG.microstate.Res.A_all{K_ind} = A(:,idx);
+    EEG.microstate.Res.A_all{K_ind} = A(:,idx);
     % Labels
     for k = 1:K
-        OUTEEG.microstate.Res.L_all{K_ind}(L==idx(k)) = k;
+        EEG.microstate.Res.L_all{K_ind}(L==idx(k)) = k;
     end
     
     % Z (not for ordinary Kmeans)
-    if ~strcmp(OUTEEG.microstate.algorithm,'K-means')
-        OUTEEG.microstate.Res.Z_all{K_ind} = OUTEEG.microstate.Res.Z_all{K_ind}(idx,:);
+    if ~strcmp(EEG.microstate.algorithm,'K-means')
+        EEG.microstate.Res.Z_all{K_ind} = EEG.microstate.Res.Z_all{K_ind}(idx,:);
     end
     
     
     %% Sorting for variables only available for K_act.
-    if K == OUTEEG.microstate.Res.K_act
+    if K == EEG.microstate.Res.K_act
         % scalp_maps and labels
-        OUTEEG.microstate.scalp_maps = OUTEEG.microstate.Res.A_all{K_ind};
-        OUTEEG.microstate.labels = OUTEEG.microstate.Res.L_all{K_ind};
+        EEG.microstate.scalp_maps = EEG.microstate.Res.A_all{K_ind};
+        EEG.microstate.labels = EEG.microstate.Res.L_all{K_ind};
         
         % Optional sorting for selected Res variables. NOTE! the Res.(variable)
         % needs to have K as its first dimension.
         for i = 1:length(sort_names_opt)
-            OUTEEG.microstate.Res.(sort_names_opt{i}) = ...
-                OUTEEG.microstate.Res.(sort_names_opt{i})(idx,:);
+            EEG.microstate.Res.(sort_names_opt{i}) = ...
+                EEG.microstate.Res.(sort_names_opt{i})(idx,:);
         end
     end
 end

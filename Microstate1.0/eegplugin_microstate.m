@@ -54,6 +54,9 @@ submenutools = uimenu( toolsmenu, 'label', 'Microstate analysis', 'separator', '
 % plotmenu = findobj(fig, 'tag', 'plot');
 % submenuplot = uimenu( plotmenu, 'label', 'Microstate analysis', 'separator', 'on');
 
+disp(catchstrs)
+disp(catchstrs.store_and_hist)
+
 
 %% Menu callback commands for submenu
 % Analysis functions
@@ -64,7 +67,7 @@ comsegment_advanced = [trystrs.no_check '[EEG LASTCOM]=pop_micro_segment(EEG);' 
     catchstrs.store_and_hist];
 combackfit = [trystrs.no_check '[EEG LASTCOM]=pop_micro_fit(EEG);' ...
     catchstrs.store_and_hist];
-comselect = [trystrs.no_check '[EEG LASTCOM]=pop_selectNmicro(EEG);' ...
+comselect = [trystrs.no_check '[EEG LASTCOM]=pop_micro_selectNmicro(EEG);' ...
     catchstrs.store_and_hist];
 comstats = [trystrs.no_check '[EEG LASTCOM]=pop_micro_stats(EEG);' ...
     catchstrs.store_and_hist];
