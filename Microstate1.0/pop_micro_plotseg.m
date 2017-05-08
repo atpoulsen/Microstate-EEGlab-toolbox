@@ -1,8 +1,8 @@
-% pop_micro_plotseg() - plots Microstate segments over the GFP.
+% pop_micro_plotseg() - plots microstate segmentation over the GFP.
 %
 %  Note - Early untested version.
 %
-% EEGlab pop function for plotting with Microstate segments over the GFP,
+% EEGlab pop function for plotting microstate segmentation over the GFP,
 % with a colour for each Microstate. Optionally the microstate numbers over
 % each segment and the topographical microstate maps can by plotted.
 % Calls the function MicroPlotSegments(). See this for more information. 
@@ -17,8 +17,8 @@
 % 
 %  Inputs
 %  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
-%             the fields 'data', 'times', 'srate' and 'chanlocs'; and the 
-%             'labels' and 'scalp_maps' fields in EEG.microstates.
+%             the fields 'data', 'times', 'srate', and 'chanlocs'; and the 
+%             'data', 'labels', and 'scalp_maps' fields in EEG.microstates.
 %
 %  Optional input:
 %  'plotsegnos' - Plot Microstate numbers above microstate segments?
@@ -77,7 +77,7 @@ if nargin < 2
     end
     popup_called = 1;
 else
-    settings = check_settings(varargin,EEG);
+    settings = check_settings(varargin);
     popup_called = 0;
 end
 
@@ -133,7 +133,7 @@ uilist = [line.info line.plotsegnos line.plottopos];
 %% Create Popup
 [~,~,~,pop_out] = inputgui( geometry, uilist, ...
     'pophelp(''pop_micro_plotseg'');', ...
-    'Draw Microstate segments over the GFP -- pop_micro_plotseg()');
+    'Draw microstate segmentation over the GFP -- pop_micro_plotseg()');
 
 
 %% Interpret output from popup

@@ -55,14 +55,14 @@
 function [OUTEEG] = MicroStats(EEG,varargin)
 %% Error check and initialisation
 if nargin < 1
-    help MicroPara;
+    help MicroStats;
     return;
 end;
 
 OUTEEG = EEG;
-com = '';
 
 settings = check_settings(varargin, EEG);
+
 
 %% Write settings to OUTEEG (overwrites any previous microstate info )
 OUTEEG.microstate.stats = settings;

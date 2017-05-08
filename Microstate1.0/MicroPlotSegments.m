@@ -1,4 +1,4 @@
-% MicroPlotSegments() - plots Microstate segments over the GFP
+% MicroPlotSegments() - plots Microstate segmention over the GFP
 %   
 %   Note - Early untested version.
 %
@@ -23,7 +23,7 @@
 %  Inputs
 %  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
 %             the fields 'data', 'times', 'srate' and 'chanlocs'; and the 
-%             'labels' and 'scalp_maps' fields in EEG.microstates.
+%             'data', 'labels' and 'scalp_maps' fields in EEG.microstates.
 %
 %  Optional input:
 %  'plotsegnos' - Plot Microstate numbers above microstate segments?
@@ -83,9 +83,21 @@ chanlocs = EEG.chanlocs;
 A = EEG.microstate.scalp_maps;
 K = size(A,2);
 labels = EEG.microstate.labels ;
-times = EEG.times;
-times(end+1) = times(end) + 1e3/EEG.srate; % adding extra sample before the first one. Assuming ms.
 icadefs;
+
+% load data and times
+if isfield(EEG.microstate,'data')
+    if ischar(EEG.microstate.data)
+        data = EEG.data;
+        times = EEG.times;
+    else
+        data = EEG.microstate.data;
+        times = (1:size(data,2))/EEG.srate;% Assuming ms.
+    end
+else
+    error('No data selected for segmentation. Run "Select data" first.')
+end
+times(end+1) = times(end) + 1e3/EEG.srate; % adding extra sample before the first one. Assuming ms.
 
 
 %% Compute title and axes font sizes 
@@ -158,7 +170,7 @@ hold on
 
 % prepare GFP plot
 empty_clusters = []; % to keep track of empty microstates
-GFP = std(EEG.data,[],1);
+GFP = std(data,[],1);
 GFP = [GFP GFP(end)]; % adding extra sample after the last one.
 
 c20 =   [0.368627450980392,0.309803921568627,0.635294117647059;0.232941976907398,0.426964379443341,0.716724269529944;

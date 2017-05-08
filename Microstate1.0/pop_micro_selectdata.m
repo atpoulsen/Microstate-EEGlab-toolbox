@@ -51,7 +51,7 @@
 % University of Zürich, Psychologisches Institut, Methoden der
 % Plastizitätsforschung. 
 %
-% February 2017.
+% May 2017.
 %
 % See also: eeglab
 
@@ -71,7 +71,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [EEG, com, ALLEEG] = pop_micro_selectdata(EEG, ALLEEG, varargin)
+function [EEG, ALLEEG, com] = pop_micro_selectdata(EEG, ALLEEG, varargin)
 %% Error check and initialisation
 com = '';
 
@@ -189,6 +189,9 @@ if strcmp(settings.datatype,'Continuous')
         NewEEG = struct;
         NewEEG.microstate.data = 'EEGdata';
         NewEEG.microstate.GFPpeaks = GFPpeaks(:)';
+        NewEEG.microstate.data_origin.ALLEEG_idx = dataset_idx;
+        dataset_names = {ALLEEG.setname};
+        NewEEG.microstate.data_origin.dataset_names = dataset_names(dataset_idx);
         
         NewEEG.data = GFPdata;
         NewEEG.setname = 'MicroGFPpeakData';
@@ -237,6 +240,9 @@ elseif strcmp(settings.datatype,'ERP')
         % Create a clean EEG structure that is used to store data.
         NewEEG = struct;
         NewEEG.microstate.data = 'EEGdata';
+        NewEEG.microstate.data_origin.ALLEEG_idx = dataset_idx;
+        dataset_names = {ALLEEG.setname};
+        NewEEG.microstate.data_origin.dataset_names = dataset_names(dataset_idx);
         
         NewEEG.data = mean(GA,3);
         NewEEG.setname = 'MicroERPdata';
@@ -250,9 +256,15 @@ elseif strcmp(settings.datatype,'ERP')
     else
         % Save data in EEG struct given as input.
         EEG.microstate.data = mean(GA,3);
-    end
-    
+    end  
 end
+
+
+%% Define command string
+com = sprintf('[%s, %s] = pop_micro_selectdata( %s, %s', inputname(1), ...
+    inputname(2),inputname(1), inputname(2));
+com = settings_to_string(com,settings);
+com = [com ' );'];
 
 end
 
@@ -355,9 +367,10 @@ if isstruct(pop_out)
         dataset_idx = [];
     end
     settings.dataset_idx = dataset_idx;
+    settings = rmfield(settings,'aggregate_data');
     
+    % remove settings related continuous data
     if ~strcmp(settings.datatype,'Continuous')
-       % remove continuous data related settings
        settings = rmfield(settings,'MinPeakDist');
        settings = rmfield(settings,'Npeaks');
        settings = rmfield(settings,'GFPthresh');
@@ -415,3 +428,37 @@ settings = finputcheck( vargs, varg_check);
 if ischar(settings), error(settings); end; % check for error
 end
 
+function com = settings_to_string(com,settings)
+% Adds settings struct to existing com string in the form 'key1', 'val1',
+% 'key2', 'val2' ... .
+% Can handle structs, strings, vectors and scalars. I.e. not matrices.
+
+names = fieldnames(settings);
+
+for i = 1:length(names)
+    if isstruct(settings.(names{i})) % struct?
+        com = settings_to_string(com,settings.(names{i}));
+    elseif isempty(settings.(names{i})) % empty?
+        com = [ com sprintf(', ''%s'', []', names{i}) ];
+    elseif ischar(settings.(names{i})) % string?
+        com = [ com sprintf(', ''%s'', ''%s''', names{i}, settings.(names{i})) ];
+    elseif length(settings.(names{i})) > 1 % vector?
+        N_elements = length(settings.(names{i}));
+        range = max(settings.(names{i})) - min(settings.(names{i})) + 1;
+        if  N_elements == range % write vetor as 'min_value:max_value'
+            com = [ com sprintf(', ''%s'', %g:%g', names{i}, ...
+                min(settings.(names{i})), max(settings.(names{i}))) ];
+        else % write vector with individual elements
+            com = [ com sprintf(', ''%s'', [%g', names{i}, ...
+                settings.(names{i})(1))];
+            for n = 2:N_elements
+                com = [ com sprintf(',%g', settings.(names{i})(n))];
+            end
+            com = [ com ']'];
+        end
+    else % scalar
+        com = [ com sprintf(', ''%s'', %g', names{i}, settings.(names{i})) ];
+    end
+end
+
+end

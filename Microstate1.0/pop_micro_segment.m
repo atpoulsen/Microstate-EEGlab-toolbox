@@ -79,8 +79,8 @@
 %
 % Outputs:
 %   EEG    - Output dataset. This function saves output in the substruct 
-%            OUTEEG.microstate, which contains info general and algorithm-
-%            specific settings as well as the results of segemntation. The
+%            OUTEEG.microstate, which contains general info and algorithm-
+%            specific settings as well as the results of segmentation. The
 %            .Res substruct contains algorithm specific results. See the
 %            relevant algorithm function for explanations on variable
 %            names.
@@ -132,7 +132,6 @@ if nargin < 1
     help pop_micro_segment;
     return;
 end;
-INEEG = EEG;
 
 
 %% pop-up window in case no further input is given
@@ -145,18 +144,30 @@ else
     settings = check_settings(varargin);
 end
 
-%% Datatype
-%ERP?
+
+%% Write settings to EEG (overwrites any previous microstate info for those fields)
+setnames = fieldnames(settings);
+for i = 1:length(setnames)
+    EEG.microstate.(setnames{i}) = settings.(setnames{i});
+end
 
 
-%% Write settings to OUTEEG (overwrites any previous microstate info )
-EEG.microstate = settings;
+%% Get data for segmentation
+if isfield(EEG.microstate,'data')
+    if ischar(EEG.microstate.data)
+        data = EEG.data;
+    else
+        data = EEG.microstate.data;
+    end
+else
+    error('No data selected for segmentation. Run "Select data" first.')
+end
 
 
 %% Normalise EEG
 if settings.normalise
     % normalising by average channel std.
-    INEEG.data = INEEG.data./mean(std(INEEG.data,0,2));
+    data = data./mean(std(data,0,2));
 end
 
 
@@ -176,7 +187,7 @@ switch settings.algorithm
         
         % running algorithm
         [EEG.microstate.scalp_maps, EEG.microstate.labels, ...
-            EEG.microstate.Res] = modkmeans(INEEG.data, K_range, opts);
+            EEG.microstate.Res] = modkmeans(data, K_range, opts);
         
         sort_names_opt = {};
         
@@ -195,14 +206,14 @@ switch settings.algorithm
         
         % running algorithm
         [EEG.microstate.scalp_maps, EEG.microstate.labels, ...
-            EEG.microstate.Res] = varMicro(INEEG.data, K_range, opts);
+            EEG.microstate.Res] = varMicro(data, K_range, opts);
         
         % Res variables that should sorted alongside scalp_maps and labels.
         sort_names_opt = {'S_opt', 'sig2_z_opt'};
         
     case 'K-means'
         % starting K-merans using subfunction
-        EEG = run_kmeans(INEEG.data,EEG,settings);
+        EEG = run_kmeans(data,EEG,settings);
         
         % Res variables that should sorted alongside scalp_maps and labels.
         sort_names_opt = {};
@@ -213,7 +224,7 @@ end
 
 
 %% Calculate measures of fit
-[KL, W, CV, GEV] = calc_fitmeas(INEEG.data, EEG.microstate.Res.A_all, ...
+[KL, W, CV, GEV] = calc_fitmeas(data, EEG.microstate.Res.A_all, ...
     EEG.microstate.Res.L_all);
 
 EEG.microstate.Res.KL = KL;
@@ -223,7 +234,7 @@ EEG.microstate.Res.GEV = GEV;
 
 
 %% Sorting microstates according to chosen method
-EEG = sort_microstates(INEEG.data,EEG,sort_names_opt);
+EEG = sort_microstates(data,EEG,sort_names_opt);
 
 
 %% Define command string
