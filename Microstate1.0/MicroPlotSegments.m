@@ -92,7 +92,7 @@ if isfield(EEG.microstate,'data')
         times = EEG.times;
     else
         data = EEG.microstate.data;
-        times = (1:size(data,2))/EEG.srate;% Assuming ms.
+        times = (1:size(data,2))/EEG.srate*1e3; % Assuming ms.
     end
 else
     error('No data selected for segmentation. Run "Select data" first.')

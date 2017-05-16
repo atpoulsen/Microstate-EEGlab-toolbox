@@ -95,27 +95,31 @@ end;
 
 %% Readying settings
 dataset_idx = settings.dataset_idx;
-Npeaks = settings.Npeaks;
-MinPeakDist  = settings.MinPeakDist;
-GFPthresh = settings.GFPthresh;
-
 if isempty(dataset_idx)
    aggregate_data = 0;
+   Ndatasets = 1;
 else
    aggregate_data = 1; 
+   Ndatasets = length(aggregate_data);
 end
 
 
 %% do the aggregation for continuous or erp data
 if strcmp(settings.datatype,'Continuous')
+    %% Readying settings for countinuous data 
+    Npeaks = settings.Npeaks;
+    MinPeakDist  = settings.MinPeakDist;
+    GFPthresh = settings.GFPthresh;
     
     % loop through the subjects
-    for i=1:length(dataset_idx)
+    for i=1:Ndatasets
         %% Load data
         if aggregate_data
             X = ALLEEG(dataset_idx(i)).data;
+            fs = ALLEEG(dataset_idx(i)).srate;
         else
             X = EEG.data;
+            fs = EEG.srate;
         end
         X = reshape(X ,size(X,1),size(X,2)*size(X,3));
         
@@ -145,7 +149,7 @@ if strcmp(settings.datatype,'Continuous')
             GFP = GFP(GFP < GFPthresh*std(GFP));
         end
         % Minimum distance in tf:
-        MinTFdistance = MinPeakDist * ALLEEG(dataset_idx(i)).srate/1000; 
+        MinTFdistance = MinPeakDist * fs/1000; 
         [~, peakidx{i,1}] = findpeaks(GFP,'MinPeakDistance',MinTFdistance); 
         % check if the peak searching algorithm does something appropriate
         % findpeaks(GFP(1:500),'MinPeakDistance',1,'Annotate','extents');
@@ -166,7 +170,7 @@ if strcmp(settings.datatype,'Continuous')
     end
     
     GFPdata = [];
-    for i=1:length(dataset_idx)
+    for i = 1:Ndatasets
         % load data
         if aggregate_data
             X = ALLEEG(dataset_idx(i)).data;
@@ -179,7 +183,7 @@ if strcmp(settings.datatype,'Continuous')
         % find a number of random peaks
         selection = randperm(length(peakidx{i,1}));
         GFPpeaks(i,:) = peakidx{1,1}(1,selection(1:Npeaks));
-        GFPdata = [GFPdata, X(GFPpeaks(i,:))]; 
+        GFPdata = [GFPdata, X(:,GFPpeaks(i,:))]; 
     end
 
     
@@ -211,7 +215,7 @@ if strcmp(settings.datatype,'Continuous')
     
 elseif strcmp(settings.datatype,'ERP')
     GA = [];
-    for i=1:length(dataset_idx)
+    for i = 1:Ndatasets
         if aggregate_data
             X = ALLEEG(dataset_idx(i)).data;
         else

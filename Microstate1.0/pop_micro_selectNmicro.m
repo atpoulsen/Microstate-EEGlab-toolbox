@@ -135,7 +135,7 @@ end
 Nmicro_ind = find(EEG.microstate.algorithm_settings.Nmicrostates == Nmicro);
 
 if isempty(Nmicro_ind)
-    error('The selected number of microstates has not been run.')
+    error('The selected number of microstates, "%d" could not be found.', Nmicro)
 else
     EEG.microstate.scalp_maps = EEG.microstate.Res.A_all{Nmicro_ind};
     EEG.microstate.labels = EEG.microstate.Res.L_all{Nmicro_ind};
@@ -144,10 +144,11 @@ end
 
 
 %% Define command string (only for Nmicro)
-com = sprintf('pop_micro_selectNmicro( %s', inputname(1));
+com = sprintf('%s = pop_micro_selectNmicro( %s, ''Nmicro'', %d );', ...
+    inputname(1), inputname(1), Nmicro);
 
-com = settings_to_string(com,settings);
-com = [com ' );'];
+% com = settings_to_string(com,settings);
+% com = [com ' );'];
 end
 
 % -------------- Pop-ups-------------- %
