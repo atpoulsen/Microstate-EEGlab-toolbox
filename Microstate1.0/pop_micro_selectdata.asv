@@ -101,8 +101,7 @@ if isempty(dataset_idx)
 else
    aggregate_data = 1; 
    Ndatasets = length(aggregate_data);
-   % check consistency of selected datasets
-   NewEEG = check_datasets_consistency(ALLEEG(dataset_idx));
+   NewEEG = check_datasets_consistency(ALLEEG, dataset_idx);
 end
 
 
@@ -191,7 +190,8 @@ if strcmp(settings.datatype,'Continuous')
     
     %% Save chosen data in the EEG struct
     if aggregate_data
-        % Add information to NewEEG struct
+        % Create a clean EEG structure that is used to store data.
+        NewEEG = struct;
         NewEEG.microstate.data = 'EEGdata';
         NewEEG.microstate.GFPpeaks = GFPpeaks(:)';
         NewEEG.microstate.data_origin.ALLEEG_idx = dataset_idx;
@@ -430,15 +430,14 @@ settings = finputcheck( vargs, varg_check);
 if ischar(settings), error(settings); end; % check for error
 end
 
-function NewEEG = check_datasets_consistency(ALLEEG)
+function NewEEG = check_datasets_consistency(ALLEEG, dataset_idx)
 %% checks if basic parameters of EEG data are consistent between datasets.
 %% and creates new EEG structure that will later be filled depending on the type of data (continuous, ERP)
 
 if isequal(ALLEEG(:).nbchan) &&  isequal(ALLEEG(:).srate); % number of channels and sampling rate
     % Create a clean EEG structure that is used to store data.
     NewEEG = eeg_emptyset();
-    NewEEG.srate = ALLEEG(1).srate;
-    NewEEG.nbchan = ALLEEG(1).nbchan;
+    NewEEG.srate = ALLEEG(:).srate;
 else
     error('The datasets differ in the number of channels and/or the sampling rate')  ;
 end

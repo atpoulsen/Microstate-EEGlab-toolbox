@@ -268,7 +268,7 @@ geo.info = {1 1 1 1};
 style.algorithm = 'popupmenu';
 popmenu.algorithm = {'K-means' 'Modified K-means'  ...
     'Topographical Atomize-Agglomerate Hierarchical Clustering' ...
-    'Experimental algorithms'};
+    'Variational microstate analysis'};
 algo_str = popmenu.algorithm{1}; %string for popupmenu
 for a = 2:length(popmenu.algorithm); algo_str = [algo_str '|' popmenu.algorithm{a}]; end;
 line.algorithm = { {'Style' 'text' 'string' 'Choose algorithm:'}, ...
@@ -348,10 +348,12 @@ if ~strcmp(settings,'cancel')
     switch settings.algorithm
         case 'Modified K-means'
             settings = modk_popup(settings);
-        case 'K-means'
-            settings = kmeans_popup(settings);
         case 'Experimental algorithms'
             settings = experimental_popup(settings);
+        case 'Variational microstate analysis'
+            settings = varmicro_popup(settings);
+        case 'K-means'
+            settings = kmeans_popup(settings);
         otherwise
             error(['selected algorithm,''' settings.algorithm ''' not available'])
     end
@@ -432,19 +434,24 @@ function settings = experimental_popup(settings)
 %
 
 %% Create Inputs for popup
+% Title string
+info_str = 'Select experimental algorithm.';
+line.info = { {'Style' 'text' 'string' info_str} {} };
+geo.info = {1 1};
+
 % Choose algorithm
 style.algorithm = 'popupmenu';
 popmenu.algorithm = {'Variational microstate analysis'};
 algo_str = popmenu.algorithm{1}; %string for popupmenu
 for a = 2:length(popmenu.algorithm); algo_str = [algo_str '|' popmenu.algorithm{a}]; end;
-line.algorithm = { {'Style' 'text' 'string' 'Select experimental algorithm:'}, ...
+line.algorithm = { {'Style' 'text' 'string' 'Choose algorithm:'}, ...
     {'Style' style.algorithm 'string' algo_str 'tag' 'algorithm'} };
 geo.algorithm = {[1 1]};
 
 
 %% Order inputs for GUI
-geometry = [geo.algorithm];
-uilist = [line.algorithm];
+geometry = [geo.info geo.algorithm];
+uilist = [line.info line.algorithm];
 
 
 %% Create Popup
@@ -454,20 +461,27 @@ uilist = [line.algorithm];
 
 %% Interpret output from popup
 if isstruct(pop_out)
-    tmp_settings = interpret_popup(pop_out, settings.algorithm_settings, style, popmenu);
-    settings.algorithm = tmp_settings.algorithm;
-    
-    % run popup for selected algorithm
-    switch settings.algorithm
-        case 'Variational microstate analysis'
-            settings = varmicro_popup(settings);
-        otherwise
-            error(['selected algorithm,''' tmp_settings.algorithm ''' not available'])
-    end
+    tmp = interpret_popup(pop_out, settings.algorithm_settings, style);
 else
     settings = 'cancel';
 end
 
+
+%% Create popup for algorithm specific settings
+if ~strcmp(settings,'cancel')
+    switch settings.algorithm
+        case 'Modified K-means'
+            settings = modk_popup(settings);
+        case 'Experimental algorithms'
+            settings = experimental_popup(settings);
+        case 'Variational microstate analysis'
+            settings = varmicro_popup(settings);
+        case 'K-means'
+            settings = kmeans_popup(settings);
+        otherwise
+            error(['selected algorithm,''' settings.algorithm ''' not available'])
+    end
+end
 
 end
 

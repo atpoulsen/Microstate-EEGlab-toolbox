@@ -77,6 +77,11 @@ end;
 
 MAX_TOPOS = 20; % maximum number of topoplots
 
+% check if chanlocs are present
+if isempty(EEG.chanlocs)
+    error('there are no channel locations, please load them (with pop_readlocs)')
+end
+
 
 %% Read data from EEG and EEGlab
 chanlocs = EEG.chanlocs;
