@@ -20,7 +20,7 @@
 % Optional inputs:
 %   ALLEEG           - EEGlab structure containing all datasets read into
 %                      EEGlab as EEG structures.
-%  'datatype'        - 'Continuous','ERP'.
+%  'datatype'        - 'continuous','ERP'.
 %  'dataset_idx'     - Indices for datasets in ALLEEG to aggragate data
 %                      from. Leave empty to use current dataset (default).
 %  'avgref'          - Calculate average reference. 1 - yes (default), 
@@ -410,20 +410,23 @@ end
 
 function settings = check_settings(vargs)
 %% check settings
-% Checks settings given as optional inputs for MicroFit.
-% Undefined inputs is set to default values.
-varg_check = {  'datatype'         'char'	[]	'ERP';
+% Checks optional inputs for pop_micro_selectdata() and enters them in
+% settings struct. Undefined inputs is set to default values.
+varg_check = {  'datatype'         'string'	[]	'ERP';
     'avgref'      'integer'	[]	1;
     'normalise' 'integer'	[]	1;
     'dataset_idx'  'real'    []         []};
 
-if ~isfield(settings, 'datatype'), settings.datatype = 'ERP'; end
-if strcmp(settings.datatype,'continuous');
-    % Adding check for continuous data related settings
-    varg_check = [varg_check;
-        {'MinPeakDist'  'real'    []         10;
-        'Npeaks'  'integer'    []         1000;
-        'GFPthresh'  'real'    []         0 } ];
+% Checking if datatype is defined
+dat_ind = find(strcmp(vargs, 'datatype'));
+if ~isempty(dat_ind)
+    if strcmp(lower(vargs{dat_ind+1}), 'continuous');
+        % Adding check for continuous data related settings
+        varg_check = [varg_check;
+            {'MinPeakDist'  'real'    []         10;
+            'Npeaks'  'integer'    []         1000;
+            'GFPthresh'  'real'    []         0 } ];
+    end
 end
 
 settings = finputcheck( vargs, varg_check);

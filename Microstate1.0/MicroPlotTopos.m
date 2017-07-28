@@ -1,16 +1,11 @@
-% MicroPlotSegments() - plots Microstate segmention over the GFP
+% MicroPlotTopos() - plots microstate topoplots for a range of microstate numbers.
 %   
 %   Note - Early untested version.
 %
-%  Draws a plot with Microstate segments over the GFP, with a colour for
-%  each Microstate. Optionally the microstate numbers over each segment and
-%  the topographical microstate maps can by plotted.
+%  Draws a plot with topographical scalp maps for a range of microstate
+%  numbers.
 %  Parts of the code is modified from the timtopo() function by Scott
 %  Makeig.
-%  Note that the GFP plot is not good at handling one microstate
-%  appearing for one sample within another (e.g. if a single microstate
-%  timepoint is plotted first, it will be "over-plotted" by the surrounding
-%  microstate). 
 %
 %  Usage:
 %   >> OUTEEG = MicroPlotSegments ( INEEG, 'key1', 'val1', 'key2', 'val2' ... )

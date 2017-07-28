@@ -1,4 +1,4 @@
-% MicroPlotSegments() - plots Microstate segmention over the GFP
+% MicroPlotTopos() - plots Microstate topoplots for a range of microstate 
 %   
 %   Note - Early untested version.
 %
@@ -13,6 +13,7 @@
 %  microstate). 
 %
 %  Usage:
+%   >> OUTEEG = MicroPlotSegments ( INEEG ); % pop up window
 %   >> OUTEEG = MicroPlotSegments ( INEEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
 %  Please cite this toolbox as:
