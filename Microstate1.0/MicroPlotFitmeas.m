@@ -1,24 +1,36 @@
 function MicroPlotFitmeas(Res, Measures, Nrange)
 %% Plots measures of fit defined in Measures (as a cell) and contained in Res.
+% If more than one measure is given, they are normalised to [0 1] and
+% plotted on same plot.
+%
 % Andreas Trier Poulsen, atpo@dtu.dk
 % Technical University of Denmark, DTU Compute, Cognitive systems.
 %
-% April 2017.
+% July 2017.
 
+Nmeasures = length(Measures);
 hold all
-for m = 1:length(Measures)   
+for m = 1:Nmeasures
     measure = Res.(Measures{m});
-    % Normalise to [0 1]
-    measure = measure - min(measure);
-    measure = measure / max(measure);
+    
+    if Nmeasures > 1
+        % Normalise to [0 1]
+        measure = measure - min(measure);
+        measure = measure / max(measure);
+    end
     
     % Plot
     plot(Nrange, measure, 'linewidth', 2)
 end
 
 xlabel('Number of Microstates')
-ylabel('Normalised measure of fit (arbitrary units)')
-legend(Measures)
+
+if Nmeasures > 1
+    ylabel('Normalised measure of fit (arbitrary units)')
+    legend(Measures)
+else
+    ylabel(Measures)
+end
 
 
 

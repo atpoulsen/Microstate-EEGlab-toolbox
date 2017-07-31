@@ -35,7 +35,6 @@
 %  'do_subplots' - If set, the created figure will contain a subplot for
 %                  each measure of fit, instead of plotting all in one
 %                  plot. 1 for subplots, 0 for all in on plot (default).
-%                  NOT IMPLEMENTED YET.
 %  'Nmicro'      - If defined, this is made the active number of microstates
 %                  used. If this is set, no figure will be created. Is
 %                  empty by default. Can be an interger or empty.
@@ -93,13 +92,6 @@ else
 end;
 
 Nmicro = settings.Nmicro;
-
-
-%% Subplots not implemented yet.
-if settings.do_subplots
-    disp('Subplots are not implemented yet. Will plot in same plot instead.')
-    settings.do_subplots = 0;
-end
 
 
 %% Check and ordering of selected measures of fit
