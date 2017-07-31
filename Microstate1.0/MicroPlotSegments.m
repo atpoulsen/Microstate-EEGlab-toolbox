@@ -5,8 +5,6 @@
 %  Draws a plot with Microstate segments over the GFP, with a colour for
 %  each Microstate. Optionally the microstate numbers over each segment and
 %  the topographical microstate maps can by plotted.
-%  Parts of the code is modified from the timtopo() function by Scott
-%  Makeig.
 %  Note that the GFP plot is not good at handling one microstate
 %  appearing for one sample within another (e.g. if a single microstate
 %  timepoint is plotted first, it will be "over-plotted" by the surrounding
@@ -38,6 +36,9 @@
 %
 % Andreas Trier Poulsen, atpo@dtu.dk
 % Technical University of Denmark, DTU Compute, Cognitive systems.
+%
+% Parts of the code is modified from the timtopo() function by Scott
+% Makeig.
 %
 % April 2017.
 %

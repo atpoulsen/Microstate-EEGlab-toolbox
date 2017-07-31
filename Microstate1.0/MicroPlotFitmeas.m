@@ -1,4 +1,4 @@
-function MicroPlotFitmeas(Res, Measures, Nrange)
+function MicroPlotFitmeas(Res, Measures, Nrange, plot_idx)
 %% Plots measures of fit defined in Measures (as a cell) and contained in Res.
 % If more than one measure is given, they are normalised to [0 1] and
 % plotted on same plot.
@@ -11,7 +11,7 @@ function MicroPlotFitmeas(Res, Measures, Nrange)
 Nmeasures = length(Measures);
 hold all
 for m = 1:Nmeasures
-    measure = Res.(Measures{m});
+    measure = Res.(Measures{m})(plot_idx);
     
     if Nmeasures > 1
         % Normalise to [0 1]
