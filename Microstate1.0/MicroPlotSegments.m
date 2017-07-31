@@ -64,12 +64,6 @@ function MicroPlotSegments(EEG, varargin)
 if nargin < 1 
     help MicroPlotSegments
     return
-% elseif nargin < 2
-%     % pop-up window in case no further input is given
-%     settings = input_popup();
-%     if strcmp(settings,'cancel')
-%         return
-%     end
 else
     settings = check_settings(varargin);
 end;
