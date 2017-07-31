@@ -20,7 +20,7 @@
 % University of Zürich, Psychologisches Institut, Methoden der
 % Plastizitätsforschung. 
 %
-% April 2017.
+% August 2017.
 %
 % See also: eeglab
 
@@ -78,8 +78,8 @@ comstats = [trystrs.no_check '[EEG LASTCOM]=pop_micro_stats(EEG);' ...
     catchstrs.store_and_hist];
 
 % Plot functions
-scalp_str = 'LASTCOM = [''figure;topo_micro(EEG.microstate.scalp_maps,EEG.chanlocs);'']; eval(LASTCOM);';
-complotscalp = [trystrs.no_check scalp_str catchstrs.store_and_hist];
+complotscalp = [trystrs.no_check '[EEG,LASTCOM] = pop_micro_plottopo(EEG);' ...
+    catchstrs.store_and_hist];
 complotseg = [trystrs.no_check '[EEG,LASTCOM] = pop_micro_plotseg(EEG);' ...
     catchstrs.store_and_hist];
 
