@@ -262,17 +262,25 @@ else
     plot_range = settings.plot_range;
 end
 
+% Find plot_idx and check that all elements in plot_range are in Nmicrostates
+[~, plot_idx] = ismember(plot_range, EEG.microstate.algorithm_settings.Nmicrostates);
+if sum(plot_idx==0)
+   warning(['The following requested microstates numbers are present in '...
+       'EEG.microstate.algorithm_settings.Nmicrostates. These will be skipped:'])
+   disp(plot_range(plot_idx==0))
+end
+
 
 %% Create figure
 h = figure('Units', 'normalized','position',[.2 .2 .6 .6], 'Visible','off');
 if settings.do_subplots
     for m = 1:Nmeas
         subplot(Nmeas+1,1,m)
-        MicroPlotFitmeas(EEG.microstate.Res, {Measures{m}}, plot_range)
+        MicroPlotFitmeas(EEG.microstate.Res, {Measures{m}}, plot_range, plot_idx)
     end
 else
     subplot('position',[0.1 .3 .85 .65])
-    MicroPlotFitmeas(EEG.microstate.Res, Measures, plot_range)
+    MicroPlotFitmeas(EEG.microstate.Res, Measures, plot_range, plot_idx)
 end
 
 
