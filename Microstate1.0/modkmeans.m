@@ -141,7 +141,7 @@ for K = K_range
                 fprintf('Smoothing done in %i iterations.\n',ind)
             end
         else
-            if opts.verbose, fprintf('\n',ind), end
+            if opts.verbose, fprintf('\n'), end
         end
         
         % Checking for best fit. We use sig2 instead of R2 as they are
