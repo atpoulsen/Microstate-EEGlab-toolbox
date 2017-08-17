@@ -201,6 +201,7 @@ if strcmp(settings.datatype,'Continuous')
         NewEEG.data = GFPdata;
         NewEEG.setname = 'MicroGFPpeakData';
         NewEEG.pnts = size(NewEEG.data,2);
+        NewEEG.chanlocs = ALLEEG(dataset_idx(1)).chanlocs; % assuming datasets have the same chanlocs
         NewEEG.times = 0:1000/NewEEG.srate:(length(NewEEG.data)*1000/NewEEG.srate)-1;
         NewEEG.event = [];
         NewEEG.urevent = [];
@@ -250,6 +251,7 @@ elseif strcmp(settings.datatype,'ERP')
         NewEEG.data = mean(GA,3);
         NewEEG.setname = 'MicroERPdata';
         NewEEG.pnts = size(NewEEG.data,2);
+        NewEEG.chanlocs = ALLEEG(dataset_idx(1)).chanlocs; % assuming datasets have the same chanlocs
         NewEEG.times = 0:1000/NewEEG.srate:(length(NewEEG.data)*1000/NewEEG.srate)-1;
         NewEEG.event = [];
         NewEEG.urevent = [];
