@@ -1,14 +1,13 @@
 % pop_micro_selectdata() - selects and aggregates data for microstate segmentation.
 %
-%  Note - Early untested version.
-%
 % MicroAggr aggregates data for microstate segmentation. For spontaneous
 % data: selection of GFP peaks. For Event related data: grand averaging. 
 %
 % Usage:
 %   >> EEG = pop_micro_selectdata ( EEG ); % pop up window
-%   >> [EEG, ALLEEG] = pop_micro_selectdata ( EEG, ALLEEG ); % pop up window
-%   >> [EEG, ALLEEG] = pop_micro_selectdata ( EEG, ALLEEG, 'key1', 'val1', 'key2', 'val2' ... )
+%   >> [EEG, ALLEEG, CURRENTSET] = pop_micro_selectdata ( EEG, ALLEEG ); % pop up window
+%   >> [EEG, ALLEEG, CURRENTSET] = pop_micro_selectdata ( EEG, ALLEEG, ...
+%                                   'key1', 'val1', 'key2', 'val2' ... )
 %
 % Please cite this toolbox as:
 % Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
@@ -26,7 +25,7 @@
 %  'avgref'          - Calculate average reference. 1 - yes (default), 
 %                      0 - no.
 %  'normalise'       - Normalise each dataset with average channel std. 
-%                      1 - yes (default), 0 - no.
+%                      1 - yes, 0 - no (default).
 %  'Markers'         - String that indicates the marker to which data is
 %                      epoched. !Not implemented yet!
 %  'MinPeakDist'     - Minimum Distance between GFP peaks in ms
@@ -40,8 +39,12 @@
 %                      caused by artifacts. Set to zero to turn off
 %                      (default).
 % Outputs:
-%   EEG    - xxxxxxxxxxxx
-%   ALLEEG - xxxxxxxxx
+%   EEG        - EEGlab EEG structure with added microstate field.
+%   ALLEEG     - EEGlab structure containing all datasets read into
+%                EEGlab as EEG structures.
+%   CURRENTSET - Workspace variable index of the current dataset. Only
+%                relevant when creating a new dataset through aggragating
+%                data.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk
@@ -51,7 +54,7 @@
 % University of Zürich, Psychologisches Institut, Methoden der
 % Plastizitätsforschung. 
 %
-% May 2017.
+% August 2017.
 %
 % See also: eeglab
 
@@ -71,9 +74,10 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [EEG, ALLEEG, com] = pop_micro_selectdata(EEG, ALLEEG, varargin)
+function [EEG, ALLEEG, CURRENTSET, com] = pop_micro_selectdata(EEG, ALLEEG, varargin)
 %% Error check and initialisation
 com = '';
+CURRENTSET = 0; % Will have value set if aggregating data.
 
 if nargin < 1
     help pop_micro_selectdata;
@@ -99,6 +103,9 @@ if isempty(dataset_idx)
    aggregate_data = 0;
    Ndatasets = 1;
 else
+   if length(dataset_idx) == 1
+      error('Please select more than one dataset, when aggregating data.') 
+   end
    aggregate_data = 1; 
    Ndatasets = length(aggregate_data);
    % check consistency of selected datasets
@@ -206,7 +213,7 @@ if strcmp(settings.datatype,'Continuous')
         NewEEG.event = [];
         NewEEG.urevent = [];
         NewEEG.eventdescription = [];
-        [ALLEEG, EEG] = eeg_store(ALLEEG, NewEEG);
+        [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, NewEEG);
     else
         % Save data in EEG struct given as input.
         EEG.microstate.data = GFPdata;
@@ -232,11 +239,12 @@ elseif strcmp(settings.datatype,'ERP')
         
         %% Normalise by average channel std.
         if settings.normalise
-            X = X ./ mean(std(X,0,2));
+            X = X ./ mean(std(X(:,:),0,2));
         end
         
-        % calculate the grand average
-        GA = cat(3,GA,X);
+        % prepareing dataset grand average
+        set_avg = mean(X,3);
+        GA = cat(3, GA, set_avg);
     end
     
     
@@ -256,7 +264,7 @@ elseif strcmp(settings.datatype,'ERP')
         NewEEG.event = [];
         NewEEG.urevent = [];
         NewEEG.eventdescription = [];
-        [ALLEEG, EEG] = eeg_store(ALLEEG, NewEEG);
+        [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, NewEEG);
     else
         % Save data in EEG struct given as input.
         EEG.microstate.data = mean(GA,3);
@@ -297,7 +305,7 @@ geo.datatype = {[1 .3]};
 % Aggregate data?
 style.aggregate_data = 'checkbox';
 line.aggregate_data = { {'Style' style.aggregate_data 'value' 0 'string' ...
-    'Select and aggregated data from other datasets (will open new window).'...
+    'Select and aggregate data from other datasets (will open new window).'...
     'tag' 'aggregate_data'} };
 geo.aggregate_data = {1};
 
@@ -310,14 +318,16 @@ geo.avgref = {1};
 % Normalise dataset(s)?
 style.normalise = 'checkbox';
 norm_tipstr = 'Normalise each dataset with average channel std. ';
-line.normalise = { {'Style' style.normalise 'value' 1 'string' 'Normalise dataset(s).' ...
+line.normalise = { {'Style' style.normalise 'value' 0 'string' 'Normalise dataset(s).' ...
     'tooltipstring' norm_tipstr 'tag' 'normalise'} };
 geo.normalise = {1};
 
 % GFP info string
-gfp_info_str = 'Settings for continuous data (will be ignored if ERP is chosen).';
-line.gfp_info = { {} {'Style' 'text' 'string' gfp_info_str 'fontweight' 'bold'}};
-geo.gfp_info = {1 1};
+gfp_info_str1 = 'Settings for the extraction of GFP peak maps.';
+gfp_info_str2 = '(Settings will be ignored if ERP is chosen).';
+line.gfp_info = { {} {'Style' 'text' 'string' gfp_info_str1 'fontweight' 'bold'}...
+    {'Style' 'text' 'string' gfp_info_str2}};
+geo.gfp_info = {1 1 1};
 
 % MinPeakDist
 style.MinPeakDist = 'edit';
@@ -329,18 +339,19 @@ geo.MinPeakDist = {[1 .2]};
 style.Npeaks = 'edit';
 npeaks_tipstr = ['Note that the maximum number of peaks is restricted to '...
     'the minimum number of GFP peaks across subjects.'];
-line.Npeaks = { {'Style' 'text' 'string' 'Relative threshold for convergence:'}, ...
-    {'Style' style.Npeaks 'string' ' 1000 ' 'tooltipstring' npeaks_tipstr ...
-    'tag' 'Npeaks'} };
+line.Npeaks = { {'Style' 'text' 'string' ...
+    'No. of GFP peaks per subject that enter the segmentation.:' ...
+    'tooltipstring' npeaks_tipstr}, ...
+    {'Style' style.Npeaks 'string' ' 1000 ' 'tag' 'Npeaks'} };
 geo.Npeaks = {[1 .2]};
 
 % GFPthresh
 style.GFPthresh = 'edit';
 thresh_tipstr = ['Set to avoid extreme GFP peaks that are likely caused by '...
     'artifacts. Set to zero to turn off.'];
-line.GFPthresh = { {'Style' 'text' 'string' 'Reject peaks over threshold (multiples of std(GFP)):'}, ...
-    {'Style' style.GFPthresh 'string' ' 0 ' 'tooltipstring' thresh_tipstr ... 
-    'tag' 'GFPthresh'} };
+line.GFPthresh = { {'Style' 'text' 'string' 'Reject peaks over threshold (multiples of std(GFP)):' ...
+    'tooltipstring' thresh_tipstr}, ...
+    {'Style' style.GFPthresh 'string' ' 0 ' 'tag' 'GFPthresh'} };
 geo.GFPthresh = {[1 .2]};
 
 
@@ -416,7 +427,7 @@ function settings = check_settings(vargs)
 % settings struct. Undefined inputs is set to default values.
 varg_check = {  'datatype'         'string'	[]	'ERP';
     'avgref'      'integer'	[]	1;
-    'normalise' 'integer'	[]	1;
+    'normalise' 'integer'	[]	0;
     'dataset_idx'  'real'    []         []};
 
 % Checking if datatype is defined
