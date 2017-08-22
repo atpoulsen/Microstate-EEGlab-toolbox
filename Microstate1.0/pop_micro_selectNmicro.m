@@ -1,6 +1,4 @@
 % [] = pop_micro_selectNmicro() - Select active number of microstates.
-%   
-%   Note - Early untested version.
 %
 %  Select active number of microstates. By default this function will plot
 %  a new figure with four measures of fit of the best segmentation for
@@ -13,8 +11,6 @@
 % Usage:
 %   >> EEG = pop_micro_selectNmicro ( EEG ); % pop up window
 %   >> EEG = pop_micro_selectNmicro( EEG, 'key1', 'val1', 'key2', 'val2', ....)
-%
-%  Note - Early untested version.
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
@@ -149,14 +145,6 @@ function settings = input_popup()
 %
 
 %% Create Inputs for popup
-% Title string
-info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
-info_str2 = 'are welcome at atpo@dtu.dk.';
-line.info = { {'Style' 'text' 'string' info_str1} ...
-    {'Style' 'text' 'string' info_str2} {} };
-geo.info = {1 1 1};
-
-
 % plot_range
 style.plot_range = 'edit';
 line.plot_range = { {'Style' 'text' 'string' 'Range of microstates to plot:'}, ...
@@ -201,7 +189,7 @@ geo.KL = {[1 1]};
 % Do subplot?
 style.do_subplots = 'checkbox';
 % sub_tipstr = 'Plot measures on seperate subplots?';
-line.do_subplots = { {'Style' style.do_subplots 'value' 0 'string'...
+line.do_subplots = { {'Style' style.do_subplots 'value' 1 'string'...
     'Plot measures on seperate subplots?' ...
     'tag' 'do_subplots'} {} };
 %     'tooltipstring' sub_tipstr 'tag' 'do_subplots'} {} };
@@ -216,9 +204,9 @@ line.Nmicro = { {'Style' 'text' 'string' 'Select active number of microstates:'}
 geo.Nmicro = {[1 .3] [1 .3]};
 
 %% Order inputs for GUI
-geometry = [geo.info geo.plot_range geo.meastitle geo.CV geo.GEV geo.W ...
+geometry = [geo.plot_range geo.meastitle geo.CV geo.GEV geo.W ...
     geo.KL {1} geo.do_subplots {1} geo.Nmicro];
-uilist = [line.info line.plot_range line.meastitle line.CV line.GEV line.W ...
+uilist = [line.plot_range line.meastitle line.CV line.GEV line.W ...
     line.KL {{}} line.do_subplots {{}} line.Nmicro];
 % geometry = [geo.info geo.plot_range ]%geo.meastitle geo.CV geo.GEV geo.W];% ...
 % %     geo.KL {1} geo.do_subplots geo.Nmicro];
@@ -346,7 +334,7 @@ function settings = check_settings(vargs)
 % Undefined inputs is set to default values.
 varg_check = {   'Measures'  {'string' 'cell'}  []  'ALL' ;
     'plot_range' 'real' [] [];
-    'do_subplots' 'integer' [0 1] 0;
+    'do_subplots' 'integer' [0 1] 1;
     'Nmicro' 'integer' [] []};
 settings = finputcheck( vargs, varg_check);
 if ischar(settings), error(settings); end; % check for error
