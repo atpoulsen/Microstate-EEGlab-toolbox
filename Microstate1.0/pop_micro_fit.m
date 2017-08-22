@@ -1,7 +1,5 @@
 % pop_micro_fit() - fits microstate prototype maps to EEG data.
 %
-%  Note - Early untested version.
-%
 % Usage:
 %   >> EEG = pop_micro_fit ( EEG ); % pop up window
 %   >> EEG = pop_micro_fit ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
@@ -102,14 +100,6 @@ function settings = fit_popup()
 %
 
 %% Create Inputs for popup
-% Title string
-info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
-info_str2 = 'are welcome at atpo@dtu.dk.';
-line.info = { {'Style' 'text' 'string' info_str1} ...
-    {'Style' 'text' 'string' info_str2} {} };
-geo.info = {1 1 1};
-
-
 % Redristibute segments (minTF)
 style.minTF = 'edit';
 line.minTF = { {'Style' 'text' 'string' 'Redistribute segments smaller than:'}, ...
@@ -148,8 +138,8 @@ geo.getorder = {[1 .2]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.minTF geo.polarity geo.sequentialize geo.getorder];
-uilist = [line.info line.minTF line.polarity line.sequentialize line.getorder];
+geometry = [geo.minTF geo.polarity geo.sequentialize geo.getorder];
+uilist = [line.minTF line.polarity line.sequentialize line.getorder];
 
 
 %% Create Popup

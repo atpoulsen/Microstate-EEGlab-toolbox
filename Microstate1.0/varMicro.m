@@ -1,8 +1,5 @@
 function [A_opt,L_opt,Res] = varMicro(X,K_range,opts)
 %VARMICRO Variational Microstates.
-%
-%  Note - Early untested version.
-%
 %  Implementation of variational microstates, with optional smoothing of
 %  segments as described in [1].
 %  Free energy is used to choose amongst multiple restarts, for the same 

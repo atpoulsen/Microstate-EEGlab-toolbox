@@ -1,7 +1,5 @@
 % MicroPlotTopo() - plots microstate topographies for a range of microstate numbers.
 %
-%   Note - Early untested version.
-%
 %  Draws a plot with topographical scalp maps for a range of microstate
 %  numbers.
 %

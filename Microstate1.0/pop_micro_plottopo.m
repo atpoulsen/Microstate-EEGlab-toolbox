@@ -1,7 +1,5 @@
 % pop_micro_plottopo() - plots microstate topoplots for a range of microstate numbers.
 %
-%  Note - Early untested version.
-%
 %  Draws a plot with topographical scalp maps for a range of microstate
 %  numbers.
 % 
@@ -94,13 +92,6 @@ function settings = input_popup()
 %
 
 %% Create Inputs for popup
-% Title string
-info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
-info_str2 = 'are welcome at atpo@dtu.dk.';
-line.info = { {'Style' 'text' 'string' info_str1} ...
-    {'Style' 'text' 'string' info_str2} {} };
-geo.info = {1 1 1};
-
 % plot_range
 style.plot_range = 'edit';
 line.plot_range = { {'Style' 'text' 'string' 'Range of microstates to plot:'}, ...
@@ -111,8 +102,8 @@ geo.plot_range = {[1 .3] [1 .3]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.plot_range];
-uilist = [line.info line.plot_range];
+geometry = [geo.plot_range];
+uilist = [line.plot_range];
 
 
 %% Create Popup

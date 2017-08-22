@@ -1,9 +1,6 @@
-%  [OUTEEG] = MicroFit(EEG,MStemp,varargin)
-%
 %  MicroFit fits microstate prototype maps to data.
+%  >> OUTEEG = MicroFit(EEG,MStemp,varargin)
 %  >> OUTEEG = MicroFit (EEG, MStemp, 'key1', 'val1', 'key2', 'val2', ....)
-%
-%  Note - Early untested version.
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).

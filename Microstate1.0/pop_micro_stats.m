@@ -1,7 +1,5 @@
 % pop_micro_stats() - calculates microstate statistics.
 %
-%  Note - Early untested version.
-%
 % Usage:
 %   >> EEG = pop_micro_stats ( EEG ); % pop up window
 %   >> EEG = pop_micro_stats ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
@@ -102,14 +100,6 @@ function settings = stats_popup()
 %
 
 %% Create Inputs for popup
-% Title string
-info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
-info_str2 = 'are welcome at atpo@dtu.dk.';
-line.info = { {'Style' 'text' 'string' info_str1} ...
-    {'Style' 'text' 'string' info_str2} {} };
-geo.info = {1 1 1};
-
-
 % Epoch
 style.epoch = 'edit';
 epoch_tipstr = 'Vector of timeframes. Leave empty to use entire range.';
@@ -120,8 +110,8 @@ geo.epoch = {[1 .2]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.epoch];
-uilist = [line.info line.epoch];
+geometry = [geo.epoch];
+uilist = [line.epoch];
 
 
 %% Create Popup

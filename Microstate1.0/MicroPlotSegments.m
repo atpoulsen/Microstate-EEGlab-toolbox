@@ -1,7 +1,5 @@
 % MicroPlotSegments() - plots Microstate segmention over the GFP
 %   
-%   Note - Early untested version.
-%
 %  Draws a plot with Microstate segments over the GFP, with a colour for
 %  each Microstate. Optionally the microstate numbers over each segment and
 %  the topographical microstate maps can by plotted.

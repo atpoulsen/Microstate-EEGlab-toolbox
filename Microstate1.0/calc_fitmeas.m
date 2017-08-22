@@ -1,7 +1,5 @@
 %CALC_FITMEAS calculates measures of fit.
 %
-%  Note - Early untested version.
-%
 %  Calculates measures of fit as defined in [1]. The notation has been
 %  adapted to be consistent with the rest of the Microstate EEGlab toolbox.
 %  Murray -> toolbox notation: q -> K; r -> k; n_r -> Nk; n -> N; D_r -> Dk.

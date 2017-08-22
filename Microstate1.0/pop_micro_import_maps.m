@@ -1,7 +1,5 @@
 % pop_micro_import_maps() - import maps from other dataset.
 %
-%  Note - Early untested version.
-%
 % Usage:
 %   >> EEG = pop_micro_import_maps ( EEG, ALLEEG ); % pop up window
 %   >> EEG = pop_micro_import_maps ( EEG, ALLEEG, data_idx )
@@ -16,7 +14,7 @@
 %                     EEGlab as EEG structures.
 %
 % Optional inputs:
-%  dataset_idx         - Index to select which dataset in AALEEG to import
+%  dataset_idx      - Index to select which dataset in AALEEG to import
 %                     microstate maps from.
 %
 % Outputs:

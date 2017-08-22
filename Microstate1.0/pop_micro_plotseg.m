@@ -1,7 +1,5 @@
 % pop_micro_plotseg() - plots microstate segmentation over the GFP.
 %
-%  Note - Early untested version.
-%
 % EEGlab pop function for plotting microstate segmentation over the GFP,
 % with a colour for each Microstate. Optionally the microstate numbers over
 % each segment and the topographical microstate maps can by plotted.
@@ -102,13 +100,6 @@ function settings = input_popup()
 %
 
 %% Create Inputs for popup
-% Title string
-info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
-info_str2 = 'are welcome at atpo@dtu.dk.';
-line.info = { {'Style' 'text' 'string' info_str1} ...
-    {'Style' 'text' 'string' info_str2} {} };
-geo.info = {1 1 1};
-
 % Plot segment numbers?
 style.plotsegnos = 'popupmenu';
 popmenu.plotsegnos = {'first' 'all' 'none'};
@@ -126,8 +117,8 @@ geo.plottopos = {[1 1]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.plotsegnos geo.plottopos];
-uilist = [line.info line.plotsegnos line.plottopos];
+geometry = [geo.plotsegnos geo.plottopos];
+uilist = [line.plotsegnos line.plottopos];
 
 
 %% Create Popup

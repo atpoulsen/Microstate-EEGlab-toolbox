@@ -1,8 +1,6 @@
-%   [OUTEEG] = MicroStats(EEG,epoch)
 %   MicroStats calculates microstate statistics.
+%   >> OUTEEG = MicroStats(EEG,epoch)
 %   >> OUTEEG = MicroStats( INEEG, 'key1', 'val1', 'key2', 'val2', ....)
-%
-%  Note - Early untested version.
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
