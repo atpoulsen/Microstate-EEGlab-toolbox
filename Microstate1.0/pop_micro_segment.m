@@ -1,7 +1,5 @@
 % pop_micro_segment() - select settings for segmentation into microstates
 %
-%  Note - Early untested version. (TAAHC not implemented yet).
-%
 % Function for segmenting EEG into microstates using either Modified
 % K-means as descibed in [1], Variational microstates as described in [2],
 % ordinary K-means using Matlabs built in function (Stats Toolbox needed)
@@ -163,6 +161,11 @@ else
     error('No data selected for segmentation. Run "Select data" first.')
 end
 
+if size(data,3) > 1
+   warning('This toolbox is not optimised for epoched data. Will average across epochs.') 
+   data = mean(data,3);
+end
+
 
 %% Normalise EEG
 if settings.normalise
@@ -255,13 +258,13 @@ function settings = segment_popup()
 
 %% Create Inputs for popup
 % Title string
-info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
-info_str2 = 'are welcome at atpo@dtu.dk.';
-info_str3 = 'This early version assumes continous data i.e, that EEG.data is 2D.';
-line.info = { {'Style' 'text' 'string' info_str1} ...
-    {'Style' 'text' 'string' info_str2}...
-    {'Style' 'text' 'string' info_str3} {} };
-geo.info = {1 1 1 1};
+% info_str1 = 'Please note that this is an early version of the plugin. Bug-reports and suggestions';
+% info_str2 = 'are welcome at atpo@dtu.dk.';
+% info_str3 = 'This early version assumes continous data i.e, that EEG.data is 2D.';
+% line.info = { {'Style' 'text' 'string' info_str1} ...
+%     {'Style' 'text' 'string' info_str2}...
+%     {'Style' 'text' 'string' info_str3} {} };
+% geo.info = {1 1 1 1};
 
 
 % Choose algorithm
@@ -317,9 +320,9 @@ geo.verbose = {[1 1]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.algorithm geo.sorting {1} geo.Nmicrostates ...
+geometry = [geo.algorithm geo.sorting {1} geo.Nmicrostates ...
     geo.temporal_smoothing geo.normalise geo.verbose];
-uilist = [line.info line.algorithm line.sorting {{}} line.Nmicrostates ...
+uilist = [line.algorithm line.sorting {{}} line.Nmicrostates ...
     line.temporal_smoothing line.normalise line.verbose];
 
 
