@@ -16,7 +16,7 @@
 %  Inputs
 %  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
 %             the fields 'data', 'times', 'srate', and 'chanlocs'; and the 
-%             'data', 'labels', and 'scalp_maps' fields in EEG.microstates.
+%             'data', 'labels', and 'prototypes' fields in EEG.microstates.
 %
 %  Optional input:
 %  'plotsegnos' - Plot Microstate numbers above microstate segments?
@@ -100,6 +100,17 @@ function settings = input_popup()
 %
 
 %% Create Inputs for popup
+% Label type?
+style.label_type = 'popupmenu';
+popmenu.label_type = {'segmentation' 'backfit'};
+lab_str = popmenu.label_type{1}; %string for popupmenu
+for lt = 2:length(popmenu.label_type); lab_str = [lab_str '|' popmenu.label_type{lt}]; end;
+lab_tipstr = ['Should the plotted labels stem from the microstate '...
+    'segmentation or from backfitting to EEG?'];
+line.label_type = { {'Style' 'text' 'string' 'Plot labels from:' 'tooltipstring' lab_tipstr}, ...
+    {'Style' style.label_type 'string' lab_str 'tag' 'label_type' 'value' 1} };
+geo.label_type = {[1 1]};
+
 % Plot segment numbers?
 style.plotsegnos = 'popupmenu';
 popmenu.plotsegnos = {'first' 'all' 'none'};
@@ -117,8 +128,8 @@ geo.plottopos = {[1 1]};
 
 
 %% Order inputs for GUI
-geometry = [geo.plotsegnos geo.plottopos];
-uilist = [line.plotsegnos line.plottopos];
+geometry = [geo.label_type geo.plotsegnos geo.plottopos];
+uilist = [line.label_type line.plotsegnos line.plottopos];
 
 
 %% Create Popup
@@ -167,7 +178,8 @@ function settings = check_settings(vargs)
 %% check settings
 % Checks settings given as optional inputs for MicroPlot.
 % Undefined inputs is set to default values.
-varg_check = {   'plotsegnos'  'string' []  'all' ;
+varg_check = {   'label_type'  'string' []  'segmentation' ;
+    'plotsegnos'  'string' []  'first' ;
     'plottopos' 'integer' [] 1};
 settings = finputcheck( vargs, varg_check);
 if ischar(settings), error(settings); end; % check for error
