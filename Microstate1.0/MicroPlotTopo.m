@@ -1,7 +1,7 @@
 % MicroPlotTopo() - plots microstate topographies for a range of microstate numbers.
 %
-%  Draws a plot with topographical scalp maps for a range of microstate
-%  numbers.
+%  Draws a plot with topographical maps for a range of microstate
+%  prototypes numbers.
 %
 %  Usage:
 %   >> OUTEEG = MicroPlotSegments ( INEEG, 'key1', 'val1', 'key2', 'val2' ... )
@@ -12,7 +12,7 @@
 %
 %  Inputs
 %  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
-%             the field 'chanlocs'; and 'scalp_map' fields in
+%             the field 'chanlocs'; and 'prototypes' fields in
 %             EEG.microstates.
 %
 %  Optional input:

@@ -102,8 +102,8 @@
 % * Add algorithm specific settings pop_up.
 % * Make sure check_settings is updated with new algorithm specific
 %   settings.
-% * add variable names from Res struct that should be sorted alongside maps
-%   and labels to the sort_names_opt cell.
+% * add variable names from Res struct that should be sorted alongside 
+%   prototypes and labels to the sort_names_opt cell.
 % * Make sure "com" string can handle new settings.
 
 % Copyright (C) 2017  Andreas Trier Poulsen, atpo@dtu.dk
@@ -189,7 +189,7 @@ switch settings.algorithm
         K_range = settings.algorithm_settings.Nmicrostates;
         
         % running algorithm
-        [EEG.microstate.scalp_maps, EEG.microstate.labels, ...
+        [EEG.microstate.prototypes, EEG.microstate.labels, ...
             EEG.microstate.Res] = modkmeans(data, K_range, opts);
         
         sort_names_opt = {};
@@ -208,17 +208,17 @@ switch settings.algorithm
         K_range = settings.algorithm_settings.Nmicrostates;
         
         % running algorithm
-        [EEG.microstate.scalp_maps, EEG.microstate.labels, ...
+        [EEG.microstate.prototypes, EEG.microstate.labels, ...
             EEG.microstate.Res] = varMicro(data, K_range, opts);
         
-        % Res variables that should sorted alongside scalp_maps and labels.
+        % Res variables that should sorted alongside prototypes and labels.
         sort_names_opt = {'S_opt', 'sig2_z_opt'};
         
     case 'K-means'
         % starting K-merans using subfunction
         EEG = run_kmeans(data,EEG,settings);
         
-        % Res variables that should sorted alongside scalp_maps and labels.
+        % Res variables that should sorted alongside prototypes and labels.
         sort_names_opt = {};
         
     otherwise
@@ -555,7 +555,7 @@ function settings = kmeans_popup(settings)
 % Title string
 info_str1 = 'Input parameters specific for ''K-means''.';
 info_str2 = 'Note that classic ''K-means'' is not polarity-invariant. ''K-means'' is therefore likely';
-info_str3 = 'to require twice as many scalp maps to explain the EEG.';
+info_str3 = 'to require twice as many prototypes to explain the EEG.';
 line.info = { {'Style' 'text' 'string' info_str1} ...
     {'Style' 'text' 'string' info_str2} ...
     {'Style' 'text' 'string' info_str3} {} };
@@ -775,7 +775,7 @@ for K = K_range
     
     % Saving optimum solution amongst different values of K
     if MSE_mcv(K_ind) < MSE_mcv_opt
-        EEG.microstate.scalp_maps = A;
+        EEG.microstate.prototypes = A;
         EEG.microstate.labels = L;
         MSE_mcv_opt = MSE_mcv(K_ind);
         K_act = K;
@@ -893,7 +893,7 @@ end
 function EEG = sort_microstates(X, EEG, sort_names_opt)
 % Sorting microstates according to chosen method. GFP and GEV is
 % implemented as descibed in [3]. Sorting Z_all, A_all and L_all (from Res.)
-% as default, looping over all K in K_range. scalp_maps, labels are also
+% as default, looping over all K in K_range. prototypes, labels are also
 % sorted by assigning the relevant variables from A_ll{K_act} and
 % L_all{K_act}. Variables defined in sort_names_opt are sorted for K_act 
 % (variables needs to have K as its first dimension).
@@ -960,7 +960,7 @@ for K = K_range
     % Saving to sorting measure to OUTEEG
     EEG.microstate.Res.(meas_name){K_ind} = sortmeas;
     
-    % Scalp maps
+    % Prototypes
     EEG.microstate.Res.A_all{K_ind} = A(:,idx);
     % Labels
     for k = 1:K
@@ -975,8 +975,8 @@ for K = K_range
     
     %% Sorting for variables only available for K_act.
     if K == EEG.microstate.Res.K_act
-        % scalp_maps and labels
-        EEG.microstate.scalp_maps = EEG.microstate.Res.A_all{K_ind};
+        % prototypes and labels
+        EEG.microstate.prototypes = EEG.microstate.Res.A_all{K_ind};
         EEG.microstate.labels = EEG.microstate.Res.L_all{K_ind};
         
         % Optional sorting for selected Res variables. NOTE! the Res.(variable)

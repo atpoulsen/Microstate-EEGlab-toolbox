@@ -125,7 +125,7 @@ Nmicro_ind = find(EEG.microstate.algorithm_settings.Nmicrostates == Nmicro);
 if isempty(Nmicro_ind)
     error('The selected number of microstates, "%d" could not be found.', Nmicro)
 else
-    EEG.microstate.scalp_maps = EEG.microstate.Res.A_all{Nmicro_ind};
+    EEG.microstate.prototypes = EEG.microstate.Res.A_all{Nmicro_ind};
     EEG.microstate.labels = EEG.microstate.Res.L_all{Nmicro_ind};
     EEG.microstate.Res.K_act = Nmicro;
 end

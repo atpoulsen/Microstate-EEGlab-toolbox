@@ -82,7 +82,7 @@ end
 
 
 %% Define command string
-com = sprintf('%s = MicroFit( %s, %s.microstate.scalp_maps', inputname(1), ...
+com = sprintf('%s = MicroFit( %s, %s.microstate.prototypes', inputname(1), ...
     inputname(1), inputname(1));
 com = settings_to_string(com,settings);
 com = [com ' );'];

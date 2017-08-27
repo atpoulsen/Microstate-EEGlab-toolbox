@@ -1,8 +1,8 @@
-% pop_micro_import_maps() - import maps from other dataset.
+% pop_micro_import_proto() - import maps from other dataset.
 %
 % Usage:
-%   >> EEG = pop_micro_import_maps ( EEG, ALLEEG ); % pop up window
-%   >> EEG = pop_micro_import_maps ( EEG, ALLEEG, data_idx )
+%   >> EEG = pop_micro_import_proto ( EEG, ALLEEG ); % pop up window
+%   >> EEG = pop_micro_import_proto ( EEG, ALLEEG, data_idx )
 %
 % Please cite this toolbox as:
 % Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
@@ -18,8 +18,8 @@
 %                     microstate maps from.
 %
 % Outputs:
-%   EEG             - EEG-lab EEG structure containing new microstate maps
-%                     in EEG.microstate.scalp_maps.
+%   EEG             - EEG-lab EEG structure containing new microstate
+%                     prototypes in EEG.microstate.prototypes.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk
@@ -44,12 +44,12 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-function [EEG, com] = pop_micro_import_maps(EEG, ALLEEG, dataset_idx)
+function [EEG, com] = pop_micro_import_proto(EEG, ALLEEG, dataset_idx)
 %% Error check and initialisation
 com = '';
 
 if nargin < 2
-    help pop_micro_import_maps
+    help pop_micro_import_proto
     return;
 end;
 
@@ -59,7 +59,7 @@ if nargin < 3
     % pop-up window in case no further input is given
     dataset_names = {ALLEEG.setname};
     [dataset_idx, confirmed] = listdlg2('ListString',dataset_names,'PromptString',...
-        'Select dataset to import maps from:', 'selectionmode', 'single');
+        'Select dataset to import prototypes from:', 'selectionmode', 'single');
     if ~confirmed
         return
     end
@@ -67,19 +67,19 @@ end;
 
 
 %% Import microstate maps
-if isfield(EEG.microstate,'scalp_maps')
-   warning('Overwriting existing scalp maps in dataset.') 
+if isfield(EEG.microstate,'prototypes')
+   warning('Overwriting existing prototypes in dataset.') 
 end
 
-if ~isfield(ALLEEG(dataset_idx).microstate,'scalp_maps')
-   error('scalp_maps not present in dataset chosen to import from.') 
+if ~isfield(ALLEEG(dataset_idx).microstate,'prototypes')
+   error('prototypes not present in dataset chosen to import from.') 
 end
 
-EEG.microstate.scalp_maps = ALLEEG(dataset_idx).microstate.scalp_maps;
+EEG.microstate.prototypes = ALLEEG(dataset_idx).microstate.prototypes;
 
 
 %% Define command string
-com = sprintf('%s = pop_micro_selectdata( %s, %s, %d)', inputname(1), ...
+com = sprintf('%s = pop_micro_import_proto( %s, %s, %d)', inputname(1), ...
     inputname(1), inputname(2), dataset_idx);
 
 end
