@@ -12,8 +12,8 @@
 %   EEG             - EEGlab EEG structure.
 %
 % Optional inputs:
-%  'minTF'          - Redristibute segments smaller than minTF to the next
-%                     best fitting microstate (default = 0).
+%  'minTF'          - Redristibute segments smaller than minTF (in ms) to 
+%                     the next best fitting microstate (default = 0).
 %  'polarity'       - account for polarity when fitting (spontaneous EEG
 %                     typically ignore polarity = 0, ERP data = 1) (default
 %                     = 0).
@@ -102,7 +102,7 @@ function settings = fit_popup()
 %% Create Inputs for popup
 % Redristibute segments (minTF)
 style.minTF = 'edit';
-line.minTF = { {'Style' 'text' 'string' 'Redistribute segments smaller than:'}, ...
+line.minTF = { {'Style' 'text' 'string' 'Redistribute segments smaller than (in ms):'}, ...
     {'Style' style.minTF 'string' ' 0 ' 'tag' 'minTF'} };
 geo.minTF = {[1 .2]};
 

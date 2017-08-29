@@ -11,7 +11,7 @@
 %  MStemp           - Microstates Template maps (channels x N microstates)
 %
 % Optional inputs:
-%  'minTF'          - Redristibute segments smaller than minTF to the next best
+%  'minTF'          - Redristibute segments smaller than minTF (in ms) to the next best
 %                     fitting microstate (default = 0)
 %  'polarity'       - account for polarity when fitting (spontaneous EEG
 %                     typically ignore polarity = 0, ERP data = 1) (default = 0)
@@ -109,8 +109,10 @@ end
 %% reject small segments
 % if there is a segment of TFs that is smaller than minTF it gets the next
 % best label. This starts with segments of length 1 and then iterates up to
-%  minTF
-for k = 1:settings.minTF
+%  minTF (in samples).
+minTF_samples = round( settings.minTF * EEG.srate/1000 ); 
+
+for k = 1:minTF_samples
     cruns = k;
     while sum(cruns <= k) > 0
         idx = [];
