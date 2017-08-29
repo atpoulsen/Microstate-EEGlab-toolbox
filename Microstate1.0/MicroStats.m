@@ -10,7 +10,7 @@
 %             .microstate.fit.bestLabel (created by MicroFit.m).
 %
 %  Optional input:
-%  'epoch'  - timewindow of analysis (vector of timeframes).
+%  'epoch'  - timewindow of analysis (vector of timeframe indices).
 %
 %  Outputs:
 %  OUTEEG.microstate.stats  - Structure of microstate parameters per trial

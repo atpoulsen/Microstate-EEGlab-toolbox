@@ -13,7 +13,7 @@
 %             .microstate.fit.bestLabel (created by MicroFit.m)
 %
 % Optional inputs:
-%  'epoch'  - timewindow of analysis (vector of timeframes)
+%  'epoch'  - timewindow of analysis (vector of timeframe indices)
 %
 % Outputs:
 %  EEG.microstate.stats      - Structure of microstate parameters per trial.
@@ -103,7 +103,7 @@ function settings = stats_popup()
 % Epoch
 style.epoch = 'edit';
 epoch_tipstr = 'Vector of timeframes. Leave empty to use entire range.';
-line.epoch = { {'Style' 'text' 'string' 'Timewindow of analysis', ...
+line.epoch = { {'Style' 'text' 'string' 'Timewindow of analysis (vector of timeframe indices)', ...
     'tooltipstring' epoch_tipstr}, ...
     {'Style' style.epoch 'string' '' 'tag' 'epoch'} };
 geo.epoch = {[1 .2]};
