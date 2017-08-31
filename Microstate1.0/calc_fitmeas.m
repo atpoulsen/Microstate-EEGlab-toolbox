@@ -91,7 +91,8 @@ for K_ind = 1:NKs
     
     
     %% CV
-    CV(K_ind) = (sum(sum(X.^2)) - sum(sum(A(:,L).*X).^2)) / (N*(C-1));
+    nrm = ( (C-1)/(C-1-K) )^2;
+    CV(K_ind) = nrm * (sum(sum(X.^2)) - sum(sum(A(:,L).*X).^2)) / (N*(C-1));
     
     
     %% W
