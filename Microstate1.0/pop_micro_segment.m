@@ -227,10 +227,11 @@ end
 
 
 %% Calculate measures of fit
-[KL, W, CV, GEV] = calc_fitmeas(data, EEG.microstate.Res.A_all, ...
+[KL, KL_nrm, W, CV, GEV] = calc_fitmeas(data, EEG.microstate.Res.A_all, ...
     EEG.microstate.Res.L_all);
 
 EEG.microstate.Res.KL = KL;
+EEG.microstate.Res.KL_nrm = KL_nrm;
 EEG.microstate.Res.W = W;
 EEG.microstate.Res.CV = CV;
 EEG.microstate.Res.GEV = GEV;

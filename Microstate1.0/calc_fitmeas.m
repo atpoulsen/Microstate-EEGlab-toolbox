@@ -3,9 +3,15 @@
 %  Calculates measures of fit as defined in [1]. The notation has been
 %  adapted to be consistent with the rest of the Microstate EEGlab toolbox.
 %  Murray -> toolbox notation: q -> K; r -> k; n_r -> Nk; n -> N; D_r -> Dk.
+%  Includes the Krzanowski-Lai criterion as originally described in [2] 
+%  with the added rule that KL(K)=0 if the dispersion function increases.
+%  
 %
 %  [1] - Murray, M. M., Brunet, D., & Michel, C. M. (2008). Topographic
 %        ERP analyses: A step-by-step tutorial review. Brain Topography.
+%  [2] - Krzanowski, W., & Lai, Y. (1988). A criterion for determining the
+%        number of groups in a dataset using sum of squares clustering.
+%        Biometrics.
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
@@ -19,7 +25,8 @@
 %            timepoint (1 x samples). Can also be single 1D array.
 %
 %  Outputs:
-%  KL      - Krzanowski-Lai criterion.
+%  KL      - Krzanowski-Lai criterion as described in [2].
+%  KL_nrm  - Normalised Krzanowski-Lai criterion as described in [1].
 %  W       - Dispersion of clusters.
 %  CV      - Cross-validation criterion.
 %  GEV     - Global explained variance.
@@ -46,7 +53,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-function [KL, W, CV, GEV] = calc_fitmeas(X,A_all,L_all)
+function [KL, KL_nrm, W, CV, GEV] = calc_fitmeas(X,A_all,L_all)
 %% Initialisation
 if iscell(A_all)
     NKs = length(A_all);
@@ -60,6 +67,7 @@ CV = nan(NKs,1);
 W = nan(NKs,1);
 M = nan(NKs,1); 
 KL = nan(NKs,1);
+KL_nrm = nan(NKs,1);
 
 
 %% Looping over K's
@@ -76,7 +84,7 @@ for K_ind = 1:NKs
     
     
     %% GEV
-    GFP = var(X);
+    GFP = std(X);
     % Calculating and summing GEV over all timepoints for the corresponding active microstates
     map_corr = columncorr(X,A(:,L));
     GEV(K_ind) = sum((GFP.*map_corr).^2) / sum(GFP.^2);
@@ -102,22 +110,55 @@ for K_ind = 1:NKs
 end
 
 
-%% KL (excludes first and last microstate segmentations)
+%% KL_nrm - Normalised KL as described in [1]
+% (excludes first and last microstate segmentations)
 if NKs < 3
     % KL requires at least three segmentations
 else
+    % preallocating
+    d = nan(NKs,1);
+    KL_top = nan(NKs,1);
+    KL_bottom = nan(NKs,1);
+    
     % d(K)=M(K)-M(K+1), excludes last segmentation.
-    d = M(1:end-1)-M(2:end);
+    d(1:end-1) = M(1:end-1) - M(2:end);
+    
     % KL_top=d(K-1)-d(K), starts at K+1, i.e. excludes first segmentation
-    KL_top = (d(1:end-1) - d(2:end)); 
-    KL_bottom = M(1:end-2); % M(K-1)
-    KL(2:end-1) = KL_top ./ KL_bottom; %excluding first and last segmentation
+    KL_top(2:end) = d(1:end-1) - d(2:end);
+    KL_bottom(2:end) = M(1:end-1);
+
+    KL_nrm = KL_top ./ KL_bottom; 
     
-    % only concave shapes of the W is considered for KL.
+    % only convex shapes of the W is considered for KL. Note in [1] they
+    % mistankenly write concave.
     % KL(K) = 0 if d(K-1)<0 or d(K-1)<d(K)
-    KL(d(1:end-1)<0) = 0;
-    KL(d(1:end-1)<d(2:end)) = 0;
+    idx1 = [false; d(1:end-1)<0];
+    idx2 = [false; d(1:end-1)<d(2:end)];
+    KL_nrm(idx1) = 0;
+    KL_nrm(idx2) = 0;
+    KL_nrm([1 end]) = nan;
+end
+
+
+%% KL - KL as described in [2]
+% (excludes first and last microstate segmentations)
+if NKs < 3
+    % KL requires at least three segmentations
+else
+    % preallocating
+    diff = nan(NKs,1);
     
+    % diff(K)=M(K-1)-M(K), excludes first segmentation. note: different from KL_nrm.
+    diff(2:end) = M(1:end-1) - M(2:end);
+    
+    % KL=abs(diff(K)/diff(K+1)), excludes last segmentation
+    KL(1:end-1) = abs(diff(1:end-1) ./ diff(2:end));
+    
+    % Added rule that diff(K) cannot be negative, i.e. M increases from K-1
+    % to K.
+    idx1 = diff<0;
+    KL(idx1) = 0;
+    KL([1 end]) = nan;
 end
 
 

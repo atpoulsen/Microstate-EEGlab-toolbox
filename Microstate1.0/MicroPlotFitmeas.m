@@ -9,6 +9,7 @@ function MicroPlotFitmeas(Res, Measures, Nrange, plot_idx)
 % July 2017.
 
 Nmeasures = length(Measures);
+Measure_legends = Measures;
 hold all
 for m = 1:Nmeasures
     measure = Res.(Measures{m})(plot_idx);
@@ -21,15 +22,20 @@ for m = 1:Nmeasures
     
     % Plot
     plot(Nrange, measure, 'linewidth', 2)
+    xlim([min(Nrange) max(Nrange)])
+    
+    if strcmp(Measures{m},'KL_nrm')
+        Measure_legends{m} = 'KL_{nrm}'; % latex style legend for KL_nrm
+    end
 end
 
 xlabel('Number of Microstates')
 
 if Nmeasures > 1
     ylabel('Normalised measure of fit (arbitrary units)')
-    legend(Measures)
+    legend(Measure_legends)
 else
-    ylabel(Measures)
+    ylabel(Measure_legends)
 end
 
 
