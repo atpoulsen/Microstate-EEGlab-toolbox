@@ -1,13 +1,19 @@
 % pop_micro_selectdata() - selects and aggregates data for microstate segmentation.
 %
-% MicroAggr aggregates data for microstate segmentation. For spontaneous
-% data: selection of GFP peaks. For Event related data: grand averaging. 
+% pop_micro_selectdata selects data for microstate segmentation, in
+% possible ways:
+% * For spontaneous data: selection of GFP peaks.
+% * For event related data: grand averaging. 
+% It is possible to aggregate data from multiple datasets loaded in ALLEEG.
+% When aggregating data a new dataset 'NewEEG' will be created and added to
+% ALLEEG.
 %
 % Usage:
 %   >> EEG = pop_micro_selectdata ( EEG ); % pop up window
-%   >> [EEG, ALLEEG, CURRENTSET] = pop_micro_selectdata ( EEG, ALLEEG ); % pop up window
-%   >> [EEG, ALLEEG, CURRENTSET] = pop_micro_selectdata ( EEG, ALLEEG, ...
-%                                   'key1', 'val1', 'key2', 'val2' ... )
+%   >> [EEG, ALLEEG, CURRENTSET, NewEEG] = pop_micro_selectdata ( EEG, ...
+%         ALLEEG ); % pop up window
+%   >> [EEG, ALLEEG, CURRENTSET, NewEEG] = pop_micro_selectdata ( EEG, ...
+%         ALLEEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
 % Please cite this toolbox as:
 % Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
@@ -45,6 +51,8 @@
 %   CURRENTSET - Workspace variable index of the current dataset. Only
 %                relevant when creating a new dataset through aggragating
 %                data.
+%   NewEEG     - New EEGlab EEG structure containing data selected for
+%                microstate analysis and info in added microstate field.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk
