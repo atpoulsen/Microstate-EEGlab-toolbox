@@ -167,7 +167,7 @@ if strcmp(settings.datatype,'Continuous')
         % OPTION, which may be included: to avoid extreme GFP peaks that are likely caused by artifacts
         if GFPthresh > 0
             noisepeak_idx = GFP(peakidx{i}) > (mean(GFP) + GFPthresh*std(GFP));
-            peakidx{i} = peakidx{i}(noisepeak_idx);
+            peakidx{i} = peakidx{i}(~noisepeak_idx);
         end
     end
 
@@ -191,6 +191,15 @@ if strcmp(settings.datatype,'Continuous')
         end
         X = reshape(X ,size(X,1),size(X,2)*size(X,3));
         
+        % Average reference
+        if settings.avgref
+            X = bsxfun(@minus, X, mean(X));
+        end
+
+        % Normalise by average channel std.
+        if settings.normalise
+            X = X ./ mean(std(X,0,2));
+        end
         
         % find a number of random peaks
         selection = randperm(length(peakidx{i}));
