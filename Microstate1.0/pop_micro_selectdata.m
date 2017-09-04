@@ -151,17 +151,16 @@ if strcmp(settings.datatype,'Continuous')
         
         % calculate the GFP
         GFP = double(std(X,[],1));
-%         plot(GFP)
         
-        %% OPTION, which may be included: to avoid extreme GFP peaks that are likely caused by artifacts
-        if GFPthresh > 0
-            GFP = GFP(GFP < GFPthresh*std(GFP));
-        end
-        % Minimum distance in tf:
-        MinTFdistance = MinPeakDist * fs/1000; 
+        % Minimum distance in ms:
+        MinTFdistance = MinPeakDist * fs/1000; % assuming ms
         [~, peakidx{i,1}] = findpeaks(GFP,'MinPeakDistance',MinTFdistance); 
-        % check if the peak searching algorithm does something appropriate
-        % findpeaks(GFP(1:500),'MinPeakDistance',1,'Annotate','extents');
+        
+        % OPTION, which may be included: to avoid extreme GFP peaks that are likely caused by artifacts
+        if GFPthresh > 0
+            noisepeak_idx = GFP(peakidx{i}) > (mean(GFP) + GFPthresh*std(GFP));
+            peakidx{i} = peakidx{i}(noisepeak_idx);
+        end
     end
 
     %% Select the GPF peaks 
@@ -170,12 +169,8 @@ if strcmp(settings.datatype,'Continuous')
     % this is the maximum number that can be selected of each subject
     maxNpeaks  = min(cellfun('length',peakidx));
     
-    if ~exist('numSelPeaks','var')
+    if Npeaks > maxNpeaks
         Npeaks = maxNpeaks;
-    else
-        if Npeaks > maxNpeaks
-            Npeaks = maxNpeaks;
-        end
     end
     
     GFPdata = [];
@@ -190,9 +185,9 @@ if strcmp(settings.datatype,'Continuous')
         
         
         % find a number of random peaks
-        selection = randperm(length(peakidx{i,1}));
-        GFPpeaks(i,:) = peakidx{1,1}(1,selection(1:Npeaks));
-        GFPdata = [GFPdata, X(:,GFPpeaks(i,:))]; 
+        selection = randperm(length(peakidx{i}));
+        GFPpeakidx{i} = peakidx{i}(selection(1:Npeaks));
+        GFPdata = [GFPdata, X(:,GFPpeakidx{i})]; 
     end
 
     
@@ -200,7 +195,7 @@ if strcmp(settings.datatype,'Continuous')
     if aggregate_data
         % Add information to NewEEG struct
         NewEEG.microstate.data = 'EEGdata';
-        NewEEG.microstate.GFPpeaks = GFPpeaks(:)';
+        NewEEG.microstate.GFPpeakidx = GFPpeakidx;
         NewEEG.microstate.data_origin.ALLEEG_idx = dataset_idx;
         dataset_names = {ALLEEG.setname};
         NewEEG.microstate.data_origin.dataset_names = dataset_names(dataset_idx);
@@ -217,7 +212,7 @@ if strcmp(settings.datatype,'Continuous')
     else
         % Save data in EEG struct given as input.
         EEG.microstate.data = GFPdata;
-        EEG.microstate.GFPpeaks = GFPpeaks(:)';
+        EEG.microstate.GFPpeakidx = GFPpeakidx{1};
     end
 
     
