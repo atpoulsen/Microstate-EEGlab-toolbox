@@ -74,10 +74,9 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [EEG, ALLEEG, CURRENTSET, com] = pop_micro_selectdata(EEG, ALLEEG, varargin)
+function [EEG, ALLEEG, com, NewEEG] = pop_micro_selectdata(EEG, ALLEEG, varargin)
 %% Error check and initialisation
 com = '';
-CURRENTSET = 0; % Will have value set if aggregating data.
 
 if nargin < 1
     help pop_micro_selectdata;
@@ -102,6 +101,7 @@ dataset_idx = settings.dataset_idx;
 if isempty(dataset_idx)
    aggregate_data = 0;
    Ndatasets = 1;
+   NewEEG = [];
 else
    if length(dataset_idx) == 1
       error('Please select more than one dataset, when aggregating data.') 
@@ -208,7 +208,7 @@ if strcmp(settings.datatype,'Continuous')
         NewEEG.event = [];
         NewEEG.urevent = [];
         NewEEG.eventdescription = [];
-        [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, NewEEG);
+        ALLEEG = eeg_store(ALLEEG, NewEEG);
     else
         % Save data in EEG struct given as input.
         EEG.microstate.data = GFPdata;
@@ -259,7 +259,7 @@ elseif strcmp(settings.datatype,'ERP')
         NewEEG.event = [];
         NewEEG.urevent = [];
         NewEEG.eventdescription = [];
-        [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, NewEEG);
+        ALLEEG = eeg_store(ALLEEG, NewEEG);
     else
         % Save data in EEG struct given as input.
         EEG.microstate.data = mean(GA,3);
@@ -350,7 +350,7 @@ line.GFPthresh = { {'Style' 'text' 'string' 'Reject peaks over threshold (multip
 geo.GFPthresh = {[1 .2]};
 
 
-%% Order inputs for GUI
+% Order inputs for GUI
 geometry = [geo.info geo.datatype geo.aggregate_data geo.avgref ...
     geo.normalise geo.gfp_info geo.MinPeakDist geo.Npeaks geo.GFPthresh];
 uilist = [line.info line.datatype line.aggregate_data line.avgref ...
