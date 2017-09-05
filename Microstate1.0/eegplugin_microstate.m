@@ -104,13 +104,14 @@ uimenu( submenutools, 'Label', 'Import microstate prototypes from other dataset'
     'CallBack', comimport);
 
 % Microstate analysis
-uimenu( submenutools, 'Label', 'Plot microstate segmentations','CallBack', ...
-    complotseg,'separator', 'on');
 uimenu( submenutools, 'Label', 'Backfit microstates on EEG', ...
-    'CallBack', combackfit);
+    'CallBack', combackfit,'separator', 'on');
 uimenu( submenutools, 'Label', 'Calculate microstate statistics', ...
     'CallBack', comstats);
 
+% Plot (and export data?)
+uimenu( submenutools, 'Label', 'Plot microstate segmentations','CallBack', ...
+    complotseg,'separator', 'on');
 
 % %% Create Plot submenus
 % uimenu( submenuplot, 'Label', 'Plot microstates scalp topographies', 'CallBack', complotscalp);
