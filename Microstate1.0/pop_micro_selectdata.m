@@ -20,7 +20,7 @@
 % manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 % Inputs:
-%   EEG             - EEGlab EEG structure.
+%   EEG              - EEGlab EEG structure.
 %
 % Optional inputs:
 %   ALLEEG           - EEGlab structure containing all datasets read into
@@ -115,7 +115,7 @@ else
       error('Please select more than one dataset, when aggregating data.') 
    end
    aggregate_data = 1; 
-   Ndatasets = length(aggregate_data);
+   Ndatasets = length(dataset_idx);
    % check consistency of selected datasets
    NewEEG = check_datasets_consistency(ALLEEG(dataset_idx));
 end
