@@ -1,31 +1,28 @@
-% pop_micro_fit() - fits microstate prototype maps to EEG data.
+% pop_micro_fit() - backfits microstate prototype maps to EEG data.
+%  
+% Backfit microstate prototype maps to EEG stored in EEG.data. 
 %
 % Usage:
 %   >> EEG = pop_micro_fit ( EEG ); % pop up window
-%   >> EEG = pop_micro_fit ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
+%   >> EEG = pop_micro_fit ( EEG, 'key1', 'val1')
 %
 % Please cite this toolbox as:
 % Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
 % manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 % Inputs:
-%   EEG             - EEGlab EEG structure.
+%   EEG - EEGlab EEG structure with microstate field.
 %
-% Optional inputs:
-%  'minTF'          - Redristibute segments smaller than minTF (in ms) to 
-%                     the next best fitting microstate (default = 0).
-%  'polarity'       - account for polarity when fitting (spontaneous EEG
-%                     typically ignore polarity = 0, ERP data = 1) (default
-%                     = 0).
-%  'sequentialize'  - sequentialize clusters (spontaneous EEG typically
-%                     ignore sequence microstates = 0, ERP data = 1)
-%                     (default = 0).
-%  'getorder'       - get the order of microstates required for MicroPara
-%                     computation of Transition Probabilities (default =
-%                     1).
+% Optional input:
+%  'polarity' - Account for polarity when fitting Typically off for
+%               spontaneous EEG and on for ERP data (default = 0).
+%
 % Outputs:
-%   EEG.microstate.fit  - struct in EEG-lab EEG structure containing info 
-%                         on microstate fitting.
+%   EEG.microstate.fit - Struct in EEG structure containing info on
+%                        microstate fitting:
+%                     .labels   - Microstate labels (N microstates x time
+%                                 (x trials)).
+%                     .polarity - See inputs.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk
@@ -35,7 +32,7 @@
 % University of Zürich, Psychologisches Institut, Methoden der
 % Plastizitätsforschung. 
 %
-% February 2017.
+% September 2017.
 %
 % See also: eeglab
 
@@ -60,7 +57,7 @@ function [EEG, com] = pop_micro_fit(EEG, varargin)
 if nargin < 1
     help pop_micro_fit;
     return;
-end;
+end
 
 % check whether microstate substruct exists.
 if ~isfield(EEG,'microstate')
@@ -76,21 +73,22 @@ if nargin < 2
     if strcmp(settings,'cancel')
         return
     end
+    disp('Fitting microstate prototype maps to EEG data...')
 else
     settings = check_settings(varargin);
 end
 
 
+%% Run backfitting
+L = MicroFit(EEG.data, EEG.microstate.prototypes, settings.polarity);
+EEG.microstate.fit.labels = L;
+EEG.microstate.fit.polarity = settings.polarity;
+
+
 %% Define command string
-com = sprintf('%s = MicroFit( %s, %s.microstate.prototypes', inputname(1), ...
-    inputname(1), inputname(1));
+com = sprintf('%s = pop_micro_fit( %s', inputname(1), inputname(1));
 com = settings_to_string(com,settings);
 com = [com ' );'];
-
-
-%% Run microstate fitting by evaluating com-string
-disp('Fitting microstate prototype maps to EEG data...')
-eval(com)
 
 end
 
@@ -100,12 +98,6 @@ function settings = fit_popup()
 %
 
 %% Create Inputs for popup
-% Redristibute segments (minTF)
-style.minTF = 'edit';
-line.minTF = { {'Style' 'text' 'string' 'Redistribute segments smaller than (in ms):'}, ...
-    {'Style' style.minTF 'string' ' 0 ' 'tag' 'minTF'} };
-geo.minTF = {[1 .2]};
-
 % Polarity
 % style.polarity = 'checkbox';
 % pol_tipstr = 'Spontaneous EEG typically ignore polarity (off). Typically on for ERP data';
@@ -120,26 +112,9 @@ line.polarity = { {'Style' 'text' 'string' 'Account for polarity when fitting.' 
 geo.polarity = {[1 .2]};
 
 
-% Sequentialize
-style.sequentialize = 'checkbox';
-seq_tipstr = 'Spontaneous EEG typically ignore sequence microstates (off), Typically on for ERP data.';
-line.sequentialize = { {'Style' 'text' 'string' 'Sequentialize clusters.' ...
-    'tooltipstring' seq_tipstr}, ...
-    {'Style' style.sequentialize 'value' 0 'tag' 'sequentialize'} };
-geo.sequentialize = {[1 .2]};
-
-% Get order
-style.getorder = 'checkbox';
-order_tipstr = 'Required for computation of Transition Probabilities in MicroPara';
-line.getorder = { {'Style' 'text' 'string' 'Get the order of microstates.' ...
-    'tooltipstring' order_tipstr}, ...
-    {'Style' style.getorder 'value' 1 'tag' 'getorder'} };
-geo.getorder = {[1 .2]};
-
-
 %% Order inputs for GUI
-geometry = [geo.minTF geo.polarity geo.sequentialize geo.getorder];
-uilist = [line.minTF line.polarity line.sequentialize line.getorder];
+geometry = geo.polarity;
+uilist = line.polarity;
 
 
 %% Create Popup
@@ -162,13 +137,10 @@ function settings = check_settings(vargs)
 % Checks settings given as optional inputs for MicroFit.
 % Undefined inputs is set to default values.
 %%
-varg_check = {  'minTF'         'integer'	[]	0;
-    'polarity'      'integer'	[]	0;
-    'sequentialize' 'integer'	[]	0;
-    'getorder'      'integer'	[]	1};
+varg_check = { 'polarity'      'integer'	[]	0 };
 
 settings = finputcheck( vargs, varg_check);
-if ischar(settings), error(settings); end; % check for error
+if ischar(settings), error(settings); end % check for error
 end
 
 function settings = interpret_popup(pop_out, settings, style, popmenu)
