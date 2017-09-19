@@ -91,7 +91,7 @@ if nargin < 1
     return;
 elseif nargin == 1
     ALLEEG = EEG; % in case ALLEEG was not given as input.
-end;
+end
 
 if nargin < 3
     % pop-up window in case no further input is given
@@ -101,7 +101,7 @@ if nargin < 3
     end
 else
     settings = check_settings(varargin);
-end;
+end
 
 
 %% Readying settings

@@ -16,8 +16,8 @@
 %  manuscript). Microstate EEGlab toolbox: An introductionary guide.
 %
 %  Inputs
-%  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
-%             the fields 'data', 'times', 'srate' and 'chanlocs'; and the
+%  EEG      - EEG-lab EEG structure with the fields 'data' (channels x
+%             samples (x epochs)), 'times', 'srate' and 'chanlocs'; and the
 %             'data', 'labels' and 'prototypes' fields in EEG.microstates.
 %
 %  Optional input:

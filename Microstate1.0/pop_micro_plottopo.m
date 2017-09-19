@@ -50,7 +50,7 @@ function [EEG, com] = pop_micro_plottopo(EEG, varargin)
 if nargin < 1
     help pop_micro_plottopo;
     return;
-end;
+end
 
 % check whether necessary microstate substructures exist.
 if ~isfield(EEG,'microstate')
