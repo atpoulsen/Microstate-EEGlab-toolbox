@@ -1,19 +1,26 @@
-%   MicroStats calculates microstate statistics.
-%   >> OUTEEG = MicroStats( INEEG, 'key1', 'val1', 'key2', 'val2', ....)
+%MICROSTATS Calculates microstate statistics.
+%
+% Usage:
+%   >> Mstats = MicroStats(X, A, L)
+%   >> Mstats = MicroStats(X, A, L,polarity,fs)
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
 %  Microstate EEGlab toolbox: An introductionary guide.
 %
 %  Inputs:
-%  EEG      - EEG-lab EEG structure (channels x samples (x epochs)) with
-%             .microstate.fit.bestLabel (created by MicroFit.m).
+%   X - EEG (channels x samples (x trials)).
+%   A - Spatial distribution of microstate prototypes (channels x K).
+%   L - Label of the most active microstate at each timepoint (trials x
+%       time).
 %
 %  Optional input:
-%  'epoch'  - timewindow of analysis (vector of timeframe indices).
+%   polarity - Account for polarity when fitting Typically off for
+%              spontaneous EEG and on for ERP data (default = 0).
+%   fs       - Sampling frequency of EEG (default = 1).
 %
 %  Outputs:
-%  OUTEEG.microstate.stats  - Structure of microstate parameters per trial
+%  Mstats - Structure of microstate parameters per trial:
 %   .Gfp        - Global field power
 %   .Occurence  - Occurence of a microstate per s
 %   .Duration   - Average duration of a microstate
@@ -21,17 +28,24 @@
 %   .GEV        - Global Explained Variance of microstate
 %   .MspatCorr  - Spatial Correlation between template maps and microstates
 %   .TP         - transition probabilities
+%   .seq        - Sequence of reoccurrence of MS ((trials x)  time).
+%   .msFirstTF  - First occurence of a microstate (similar to use like seq)
+%                 ((trials x)  time)
+%   .polarity   - see inputs.
 %
-%  OUTEEG.microstate.stats.avgs - Structure of microstate parameters mean /
-%                                 standard deviation over trials.
+%  Mstats.avgs - Structure of microstate parameters mean / and std over
+%                trials.
 %
-% Author:
+% Authors:
 %
 % Andreas Pedroni, andreas.pedroni@uzh.ch
 % University of Zürich, Psychologisches Institut, Methoden der
 % Plastizitätsforschung.
 %
-% February 2017.
+% Andreas Trier Poulsen, atpo@dtu.dk
+% Technical University of Denmark, DTU Compute, Cognitive systems.
+%
+% September 2017.
 
 % Copyright (C) 2017 Andreas Pedroni, andreas.pedroni@uzh.ch.
 %
@@ -49,72 +63,137 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [OUTEEG] = MicroStats(EEG,varargin)
+function Mstats = MicroStats(X,A,L,polarity,fs)
 %% Error check and initialisation
-if nargin < 1
+if nargin < 5
+    fs = 1;
+elseif nargin < 3
+    polaroty = 0;
+elseif nargin < 3
     help MicroStats;
     return;
-end;
+end
 
-OUTEEG = EEG;
-
-settings = check_settings(varargin, EEG);
-
-
-%% Write settings to OUTEEG (overwrites any previous microstate info )
-OUTEEG.microstate.stats = settings;
+[C,N,Ntrials] = size(X);
+K = size(A,2);
 
 
-%% prepare the data and arrays
-% only analyze the timewindow of interest
-mslabels = OUTEEG.microstate.fit.bestLabel(:,settings.epoch);
+%% Spatial correlation between microstate prototypes and EEG
+% force average reference
+X = X - repmat(mean(X,1),[C,1,1]);
+
+%Check if the data has more than one trial or not and reshape if necessary
+if Ntrials > 1 % for epoched data
+    X = squeeze(reshape(X, C, N*Ntrials));
+end
+
+% Normalise EEG and maps (average reference and gfp = 1 for EEG)
+X = X ./ repmat(std(X,1), C, 1); % already have average reference
+A_nrm = (A - repmat(mean(A,1), C, 1)) ./ repmat(std(A,1), C, 1);
+
+% Global map dissilarity
+GMD = nan(K,N);
+for k = 1:K
+    GMD(k,:) = sqrt(mean( (X - repmat(A_nrm(:,k),1,N)).^2 ));
+end
+
+% Account for polarity (recommended 0 for spontaneous EEG)
+if polarity == 0
+    GMDinvpol = nan(K,N);
+    for k = 1:K
+        GMDinvpol(k,:) = sqrt(mean( (X - repmat(-A_nrm(:,k),1,size(X,2))).^2));
+    end
+    idx = GMDinvpol < GMD;
+    GMD(idx) = GMDinvpol(idx);
+end
+
+% Calculate the spatial correlation between microstate prototypes and EEG
+SpatCorr = 1 - (GMD.^2)./2;
+SpatCorr = squeeze(reshape(SpatCorr,K,N,Ntrials));
+
+
+%% Sequentialize
+% take into account the sequence of occurence of microstates. This makes
+% only sense in ERP data (if it makes sense)
+seq = nan(Ntrials, N);
+msFirstTF = nan(Ntrials, N);
+for trial = Ntrials
+    first = 1;
+    s = ones(K,1);
+    for n = 1:(N-1)
+        if L(trial,n) == L(trial,n+1)
+            seq(trial,n) = s(L(trial,n));
+            msFirstTF(trial,n) = first;
+        else
+            seq(trial,n) = s(L(trial,n))  ;
+            s(L(trial,n),1) = s(L(trial,n),1) + 1;
+            first = n;
+            msFirstTF(trial,n) = first;
+        end
+    end
+    seq(trial,n+1) = seq(trial,n);
+    msFirstTF(trial,n+1) = msFirstTF(trial,n);
+end
+
+
+%% Microstate Order for transition probabilities
+order = cell(Ntrials,1);
+for trial = 1:Ntrials
+    [order{trial}, ~ ] = my_RLE(L(trial,:));
+end
+
+
+
+%% Preallocating arrays for stats and readying GFP
 % prepare arrays (only MGFP can have NANs!)
-MGFP= nan(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
-MDur=zeros(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
-MOcc=zeros(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
-TCov=zeros(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
-GEV = nan(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
-MspatCorr = nan(size(OUTEEG.data,3),size(OUTEEG.microstate.fit.MStemplate,2));
-GFP = OUTEEG.microstate.fit.GFP(:,settings.epoch);
+MGFP = nan(Ntrials,K);
+MDur = zeros(Ntrials,K);
+MOcc = zeros(Ntrials,K);
+TCov = zeros(Ntrials,K);
+GEV = nan(Ntrials,K);
+MspatCorr = nan(Ntrials,K);
+GFP = squeeze(std(X));
+if Ntrials>1
+    GFP = GFP';
+end
 
 
 %% For each MS class...
-for ms = 1:size(OUTEEG.microstate.fit.MStemplate,2)
-    for t = 1:size(OUTEEG.data,3)
+for k = 1:K
+    for trial = 1:Ntrials
         
         % Mean GFP
-        MGFP(t,ms) = nanmean(GFP(t,mslabels(t,:)==ms));
+        MGFP(trial,k) = nanmean(GFP(trial,L(trial,:)==k));
         
-        runvalue = []; runs = [];
-        [runvalue, runs] = my_RLE(mslabels(t,:));
+        [runvalue, runs] = my_RLE(L(trial,:));
         
         % Mean Duration
-        if isnan(nanmean(runs(runvalue == ms)))
-            MDur(t,ms) = 0;
-            MOcc(t,ms) = 0;
+        if isnan(nanmean(runs(runvalue == k)))
+            MDur(trial,k) = 0;
+            MOcc(trial,k) = 0;
         else
-            MDur(t,ms) =  nanmean(runs(runvalue == ms)) .* (1000 / EEG.srate);
+            MDur(trial,k) =  nanmean(runs(runvalue == k)) .* (1000 / fs);
             % Occurence
-            MOcc(t,ms) =  length(runs(runvalue == ms))./length(settings.epoch).* OUTEEG.srate;
+            MOcc(trial,k) =  length(runs(runvalue == k))./N.* fs;
         end
         % time coverage
-        TCov(t,ms) = (MDur(t,ms) .* MOcc(t,ms))./ 1000;
+        TCov(trial,k) = (MDur(trial,k) .* MOcc(trial,k))./ 1000;
         
         % Average spatial correlation per Microstate
-        MspatCorrTMP = EEG.microstate.fit.spatCorr(:,settings.epoch,t);
-        MspatCorr(t,ms) = nanmean(MspatCorrTMP(ms,mslabels(t,:)==ms));
+        MspatCorrTMP = SpatCorr(:,:,trial);
+        MspatCorr(trial,k) = nanmean(MspatCorrTMP(k,L(trial,:)==k));
         
         % global explained variance
-        GEV(t,ms) = (sum(GFP(t,mslabels(t,:)==ms) .* MspatCorrTMP(ms,mslabels(t,:)==ms)).^2)./ (sum(GFP(t,mslabels(t,:)==ms)).^2);
+        GEV(trial,k) = (sum(GFP(trial,L(trial,:)==k) .* MspatCorrTMP(k,L(trial,:)==k)).^2)./ (sum(GFP(trial,L(trial,:)==k)).^2);
     end
 end
 
 %% Transition Probabilities (as with hmmestimate(states,states);)
-for t = 1:size(OUTEEG.microstate.fit.order,1)
-    states = OUTEEG.microstate.fit.order{t,:};
+for trial = 1:Ntrials
+    states = order{trial,:};
     states = states(states ~= 0);
     % prepare output matrix
-    numStates = size(OUTEEG.microstate.fit.MStemplate,2);
+    numStates = K;
     tr = zeros(numStates);
     seqLen = length(states);
     % count up the transitions from the state path
@@ -125,47 +204,40 @@ for t = 1:size(OUTEEG.microstate.fit.order,1)
     % if we don't have any values then report zeros instead of NaNs.
     trRowSum(trRowSum == 0) = -inf;
     % normalize to give frequency estimate.
-    TP(:,:,t) = tr./repmat(trRowSum,1,numStates);
+    TP(:,:,trial) = tr./repmat(trRowSum,1,numStates);
 end
 
 
 %% Write to EEG structure
 %   per trial:
-OUTEEG.microstate.stats.Gfp = MGFP;
-OUTEEG.microstate.stats.Occurence = MOcc;
-OUTEEG.microstate.stats.Duration = MDur;
-OUTEEG.microstate.stats.Coverage = TCov;
-OUTEEG.microstate.stats.GEV = GEV;
-OUTEEG.microstate.stats.MspatCorr = MspatCorr;
-OUTEEG.microstate.stats.TP = TP;
+Mstats.Gfp = MGFP;
+Mstats.Occurence = MOcc;
+Mstats.Duration = MDur;
+Mstats.Coverage = TCov;
+Mstats.GEV = GEV;
+Mstats.MspatCorr = MspatCorr;
+Mstats.TP = TP;
+Mstats.seq = seq;
+Mstats.msFirstTF = msFirstTF;
+Mstats.polarity = polarity;
 
-if size(OUTEEG.data,3) > 1;
+if Ntrials > 1
     % mean parameters
-    OUTEEG.microstate.stats.avgs.Gfp = nanmean(MGFP,1);
-    OUTEEG.microstate.stats.avgs.Occurence = nanmean(MOcc,1);
-    OUTEEG.microstate.stats.avgs.Duration = nanmean(MDur,1);
-    OUTEEG.microstate.stats.avgs.Coverage = nanmean(TCov,1);
-    OUTEEG.microstate.stats.avgs.GEV = nanmean(GEV,1);
-    OUTEEG.microstate.stats.avgs.MspatCorr = nanmean(MspatCorr,1);
+    Mstats.avgs.Gfp = nanmean(MGFP,1);
+    Mstats.avgs.Occurence = nanmean(MOcc,1);
+    Mstats.avgs.Duration = nanmean(MDur,1);
+    Mstats.avgs.Coverage = nanmean(TCov,1);
+    Mstats.avgs.GEV = nanmean(GEV,1);
+    Mstats.avgs.MspatCorr = nanmean(MspatCorr,1);
     
     % standard deviation of parameters
-    OUTEEG.microstate.stats.avgs.stdGfp = nanstd(MGFP,1);
-    OUTEEG.microstate.stats.avgs.stdOccurence = nanstd(MOcc,1);
-    OUTEEG.microstate.stats.avgs.stdDuration = nanstd(MDur,1);
-    OUTEEG.microstate.stats.avgs.stdCoverage = nanstd(TCov,1);
-    OUTEEG.microstate.stats.avgs.stdGEV = nanstd(GEV,1);
-    OUTEEG.microstate.stats.avgs.stdMspatCorr = nanstd(MspatCorr,1);
+    Mstats.avgs.stdGfp = nanstd(MGFP);
+    Mstats.avgs.stdOccurence = nanstd(MOcc);
+    Mstats.avgs.stdDuration = nanstd(MDur);
+    Mstats.avgs.stdCoverage = nanstd(TCov);
+    Mstats.avgs.stdGEV = nanstd(GEV);
+    Mstats.avgs.stdMspatCorr = nanstd(MspatCorr);
 end
-end
-
-% -------------- helper functions -------------- %
-function settings = check_settings(vargs, EEG)
-%% Check settings
-% Checks settings given as optional inputs for MicroStats.
-% Undefined inputs is set to default values.
-varg_check = { 'epoch'  'integer'    []         1:size(EEG.data,2)};
-settings = finputcheck( vargs, varg_check);
-if ischar(settings), error(settings); end; % check for error
 end
 
 function [d,c]=my_RLE(x)
