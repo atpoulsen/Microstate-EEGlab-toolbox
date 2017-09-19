@@ -34,15 +34,9 @@
 %                         (default:1).
 %  'normalise'          - Normalise EEG with average channel std.
 %                         (default: 1).
-%  'temporal_smoothing' - Employ temporal smoothing of microstate labeling?
-%                         (default: 0).
 %
 % Optional algorithm specific inputs:
 % * Modified K-means:
-%   'smooth_width'   - Temporal smoothing width. Denotes the samples on each side
-%                      of current sample (default: 0). Setting to zero
-%                      turns smoothing off.
-%   'smooth_weight'  - Temporal smoothing weight (default: 5).
 %   'Nrepetitions'   - Number of random initialisations of algorithm
 %                      (default: 10).
 %   'max_iterations' - Maximum number of iterations of algorithm
@@ -53,21 +47,17 @@
 % * Variational microstates:
 %   'sig2_0'         - Prior variance of activations (default: average
 %                      EEG channel variance).
-%   'p0'             - Probability for having same microstate as last
-%                      timepoint (default: 0). Setting to zero turns
-%                      smoothing off.
 %   'Nrepetitions'   - Number of random initialisations of algorithm
 %                      (default: 10).
 %   'max_iterations' - Maximum number of iterations of algorithm
 %                      (default: 1000).
 %   'threshold'      - Threshold of convergence based on relative change
 %                      in noise variance (default: 1e-6).
+%   'p0'             - Probability for having same microstate as last
+%                      timepoint (default: 0). Setting to zero turns
+%                      smoothing off.
 %
 % * K-means:
-%   'smooth_width'   - Temporal smoothing width. Denotes the samples on each side
-%                      of current sample (default: 0). Setting to zero
-%                      turns smoothing off.
-%   'smooth_weight'  - Temporal smoothing weight (default: 5).
 %   'Nrepetitions'   - Number of random initialisations of algorithm
 %                      (default: 10).
 %   'max_iterations' - Maximum number of iterations of algorithm
@@ -129,7 +119,7 @@ com = '';
 if nargin < 1
     help pop_micro_segment;
     return;
-end;
+end
 
 
 %% pop-up window in case no further input is given
@@ -176,16 +166,16 @@ end
 
 %% Run selected algorithm
 switch settings.algorithm
-    case 'Modified K-means'
+    case 'modkmeans'
         % readying algorithm settings
         opts_settings_names = {
-            'lambda' 'smooth_weight';
-            'b' 'smooth_width';
             'reps' 'Nrepetitions';
             'max_iterations' 'max_iterations';
             'thresh' 'threshold';
             'verbose' 'verbose'};
         opts = algosettings_to_opts(settings,opts_settings_names);
+        opts.b = 0; % no post-segment smoothing
+        
         K_range = settings.algorithm_settings.Nmicrostates;
         
         % running algorithm
@@ -195,7 +185,7 @@ switch settings.algorithm
         sort_names_opt = {};
         
         
-    case 'Variational microstate analysis'
+    case 'varmicro'
         % readying algorithm settings
         opts_settings_names = {
             'sig2_0' 'sig2_0';
@@ -214,7 +204,8 @@ switch settings.algorithm
         % Res variables that should sorted alongside prototypes and labels.
         sort_names_opt = {'S_opt', 'sig2_z_opt'};
         
-    case 'K-means'
+    case 'kmeans'
+        settings.temporal_smoothing = 0; % no post-segment smoothing
         % starting K-merans using subfunction
         EEG = run_kmeans(data,EEG,settings);
         
@@ -270,11 +261,12 @@ function settings = segment_popup()
 
 % Choose algorithm
 style.algorithm = 'popupmenu';
-popmenu.algorithm = {'K-means' 'Modified K-means'  ...
+dropdown_algo = {'K-means' 'Modified K-means'  ... % For dropdown menu
     'Topographical Atomize-Agglomerate Hierarchical Clustering' ...
     'Experimental algorithms'};
-algo_str = popmenu.algorithm{1}; %string for popupmenu
-for a = 2:length(popmenu.algorithm); algo_str = [algo_str '|' popmenu.algorithm{a}]; end;
+popmenu.algorithm = {'kmeans' 'modkmeans' 'TAAHC' 'Experimental algorithms'}; % Corresponding calls for pop-function
+algo_str = dropdown_algo{1}; %string for popupmenu
+for a = 2:length(dropdown_algo); algo_str = [algo_str '|' dropdown_algo{a}]; end
 line.algorithm = { {'Style' 'text' 'string' 'Choose algorithm:'}, ...
     {'Style' style.algorithm 'string' algo_str 'tag' 'algorithm' 'value' 2} };
 geo.algorithm = {[1 1]};
@@ -297,13 +289,13 @@ line.sorting = { {'Style' 'text' 'string' 'Sort microstates according to ... :'}
     {'Style' style.sorting 'string' sort_str 'tag' 'sorting'} };
 geo.sorting = {[1 1]};
 
-% Smoothing
-style.temporal_smoothing = 'checkbox';
-smooth_tipstr = ['Employ temporal smoothing of microstate labeling. If '...
-    'selected a popup window will ask for smoothing parameters.'];
-line.temporal_smoothing = { {'Style' style.temporal_smoothing 'value' 0 'string' 'Temporal smoothing' ...
-    'tooltipstring' smooth_tipstr 'tag' 'temporal_smoothing'} {} };
-geo.temporal_smoothing = {[1 1]};
+% % Smoothing
+% style.temporal_smoothing = 'checkbox';
+% smooth_tipstr = ['Employ temporal smoothing of microstate labeling. If '...
+%     'selected a popup window will ask for smoothing parameters.'];
+% line.temporal_smoothing = { {'Style' style.temporal_smoothing 'value' 0 'string' 'Temporal smoothing' ...
+%     'tooltipstring' smooth_tipstr 'tag' 'temporal_smoothing'} {} };
+% geo.temporal_smoothing = {[1 1]};
 
 % Normalisation
 style.normalise = 'checkbox';
@@ -322,9 +314,9 @@ geo.verbose = {[1 1]};
 
 %% Order inputs for GUI
 geometry = [geo.algorithm geo.sorting {1} geo.Nmicrostates ...
-    geo.temporal_smoothing geo.normalise geo.verbose];
+    geo.normalise geo.verbose];
 uilist = [line.algorithm line.sorting {{}} line.Nmicrostates ...
-    line.temporal_smoothing line.normalise line.verbose];
+    line.normalise line.verbose];
 
 
 %% Create Popup
@@ -350,9 +342,9 @@ end
 %% Create popup for algorithm specific settings
 if ~strcmp(settings,'cancel')
     switch settings.algorithm
-        case 'Modified K-means'
+        case 'modkmeans'
             settings = modk_popup(settings);
-        case 'K-means'
+        case 'kmeans'
             settings = kmeans_popup(settings);
         case 'Experimental algorithms'
             settings = experimental_popup(settings);
@@ -391,31 +383,29 @@ line.threshold = { {'Style' 'text' 'string' 'Relative threshold for convergence:
     {'Style' style.threshold 'string' ' 1e-6 ' 'tag' 'threshold'} };
 geo.threshold = {[1 .2]};
 
-% Smoothing info string
-smooth_info_str = 'Temporal smoothing.';
-line.smooth_info = { {} {'Style' 'text' 'string' smooth_info_str 'fontweight' 'bold'}};
-geo.smooth_info = {1 1};
-
-% Smoothing width
-style.smooth_width = 'edit';
-if_width = fastif(settings.temporal_smoothing, { ' 3 ' }, { '0' 'enable' 'off' });
-line.smooth_width = { {'Style' 'text' 'string' 'Width of smoothing windows (in samples):'}, ...
-    {'Style' style.smooth_width 'string' if_width{:} 'tag' 'smooth_width'} };
-geo.smooth_width = {[1 .2]};
-
-% Smoothing weight
-style.smooth_weight = 'edit';
-if_weight = fastif(settings.temporal_smoothing, { ' 5 ' }, { '0' 'enable' 'off' });
-line.smooth_weight = { {'Style' 'text' 'string' 'Smoothing weight:'}, ...
-    {'Style' style.smooth_weight 'string' if_weight{:} 'tag' 'smooth_weight'} };
-geo.smooth_weight = {[1 .2]};
+% % Smoothing info string
+% smooth_info_str = 'Temporal smoothing.';
+% line.smooth_info = { {} {'Style' 'text' 'string' smooth_info_str 'fontweight' 'bold'}};
+% geo.smooth_info = {1 1};
+% 
+% % Smoothing width
+% style.smooth_width = 'edit';
+% if_width = fastif(settings.temporal_smoothing, { ' 3 ' }, { '0' 'enable' 'off' });
+% line.smooth_width = { {'Style' 'text' 'string' 'Width of smoothing windows (in samples):'}, ...
+%     {'Style' style.smooth_width 'string' if_width{:} 'tag' 'smooth_width'} };
+% geo.smooth_width = {[1 .2]};
+% 
+% % Smoothing weight
+% style.smooth_weight = 'edit';
+% if_weight = fastif(settings.temporal_smoothing, { ' 5 ' }, { '0' 'enable' 'off' });
+% line.smooth_weight = { {'Style' 'text' 'string' 'Smoothing weight:'}, ...
+%     {'Style' style.smooth_weight 'string' if_weight{:} 'tag' 'smooth_weight'} };
+% geo.smooth_weight = {[1 .2]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.Nrepetitions geo.max_iterations geo.threshold ...
-    geo.smooth_info geo.smooth_width geo.smooth_weight];
-uilist = [line.info line.Nrepetitions line.max_iterations line.threshold ...
-    line.smooth_info line.smooth_width line.smooth_weight];
+geometry = [geo.info geo.Nrepetitions geo.max_iterations geo.threshold];
+uilist = [line.info line.Nrepetitions line.max_iterations line.threshold];
 
 
 %% Create Popup
@@ -438,9 +428,10 @@ function settings = experimental_popup(settings)
 %% Create Inputs for popup
 % Choose algorithm
 style.algorithm = 'popupmenu';
-popmenu.algorithm = {'Variational microstate analysis'};
-algo_str = popmenu.algorithm{1}; %string for popupmenu
-for a = 2:length(popmenu.algorithm); algo_str = [algo_str '|' popmenu.algorithm{a}]; end;
+dropdown_algo = {'Variational microstate analysis'}; %for dropdown menu
+popmenu.algorithm = {'varmicro'}; %corresponding calls for pop-function
+algo_str = dropdown_algo{1}; 
+for a = 2:length(dropdown_algo); algo_str = [algo_str '|' dropdown_algo{a}]; end;
 line.algorithm = { {'Style' 'text' 'string' 'Select experimental algorithm:'}, ...
     {'Style' style.algorithm 'string' algo_str 'tag' 'algorithm'} };
 geo.algorithm = {[1 1]};
@@ -463,7 +454,7 @@ if isstruct(pop_out)
     
     % run popup for selected algorithm
     switch settings.algorithm
-        case 'Variational microstate analysis'
+        case 'varmicro'
             settings = varmicro_popup(settings);
         otherwise
             error(['selected algorithm,''' tmp_settings.algorithm ''' not available'])
@@ -520,11 +511,16 @@ geo.smooth_info = {1 1};
 
 % Smoothing weight
 style.p0 = 'edit';
-if_weight = fastif(settings.temporal_smoothing, { ' 0.3 ' }, { '0' 'enable' 'off' });
+% if_weight = fastif(settings.temporal_smoothing, { ' 0.3 ' }, { '0' 'enable' 'off' });
+% line.weight = { {'Style' 'text' 'string' 'Probability for having same microstate as last timepoint (p0):'}, ...
+%     {'Style' style.p0 'string' if_weight{:} 'tag' 'p0'},... %end of first line
+%     {'Style' 'text' 'string' '(smoothing weight, between 0 and 1).'},...
+%     {}  };
 line.weight = { {'Style' 'text' 'string' 'Probability for having same microstate as last timepoint (p0):'}, ...
-    {'Style' style.p0 'string' if_weight{:} 'tag' 'p0'},... %end of first line
-    {'Style' 'text' 'string' '(smoothing weight, between 0 and 1).'},...
+    {'Style' style.p0 'string' ' 0 ' 'tag' 'p0'},... %end of first line
+    {'Style' 'text' 'string' '(smoothing weight, between 0 and 1. No smoothing if set to zero.)'},...
     {}  };
+
 geo.weight = {g g};
 
 
@@ -574,40 +570,38 @@ line.max_iterations = { {'Style' 'text' 'string' 'Max. no. of iterations:'}, ...
     {'Style' style.max_iterations 'string' ' 1000 ' 'tag' 'max_iterations'} };
 geo.max_iterations = {[1 .2]};
 
-% Smoothing info string
-smooth_info_str1 = 'Temporal smoothing.';
-smooth_info_str2 = 'Note: For K-means the mean squared error is minimised directly.';
-line.smooth_info = { {} {'Style' 'text' 'string' smooth_info_str1 'fontweight' 'bold'}, ...
-    {'Style' 'text' 'string' smooth_info_str2} };
-geo.smooth_info = {1 1 1};
-
-% Smoothing width
-style.smooth_width = 'edit';
-if_width = fastif(settings.temporal_smoothing, { ' 3 ' }, { '0' 'enable' 'off' });
-line.smooth_width = { {'Style' 'text' 'string' 'Width of smoothing windows (in samples):'}, ...
-    {'Style' style.smooth_width 'string' if_width{:} 'tag' 'smooth_width'} };
-geo.smooth_width = {[1 .2]};
-
-% Smoothing weight
-style.smooth_weight = 'edit';
-if_weight = fastif(settings.temporal_smoothing, { ' 5 ' }, { '0' 'enable' 'off' });
-line.smooth_weight = { {'Style' 'text' 'string' 'Smoothing weight:'}, ...
-    {'Style' style.smooth_weight 'string' if_weight{:} 'tag' 'smooth_weight'} };
-geo.smooth_weight = {[1 .2]};
-
-% Threshold
-style.threshold = 'edit';
-if_thresh = fastif(settings.temporal_smoothing, { ' 1e-6 ' }, { 'NaN' 'enable' 'off' });
-line.threshold = { {'Style' 'text' 'string' 'Relative threshold for convergence:'}, ...
-    {'Style' style.threshold 'string' if_thresh{:} 'tag' 'threshold'} };
-geo.threshold = {[1 .2]};
+% % Smoothing info string
+% smooth_info_str1 = 'Temporal smoothing.';
+% smooth_info_str2 = 'Note: For K-means the mean squared error is minimised directly.';
+% line.smooth_info = { {} {'Style' 'text' 'string' smooth_info_str1 'fontweight' 'bold'}, ...
+%     {'Style' 'text' 'string' smooth_info_str2} };
+% geo.smooth_info = {1 1 1};
+% 
+% % Smoothing width
+% style.smooth_width = 'edit';
+% if_width = fastif(settings.temporal_smoothing, { ' 3 ' }, { '0' 'enable' 'off' });
+% line.smooth_width = { {'Style' 'text' 'string' 'Width of smoothing windows (in samples):'}, ...
+%     {'Style' style.smooth_width 'string' if_width{:} 'tag' 'smooth_width'} };
+% geo.smooth_width = {[1 .2]};
+% 
+% % Smoothing weight
+% style.smooth_weight = 'edit';
+% if_weight = fastif(settings.temporal_smoothing, { ' 5 ' }, { '0' 'enable' 'off' });
+% line.smooth_weight = { {'Style' 'text' 'string' 'Smoothing weight:'}, ...
+%     {'Style' style.smooth_weight 'string' if_weight{:} 'tag' 'smooth_weight'} };
+% geo.smooth_weight = {[1 .2]};
+%
+% % Threshold
+% style.threshold = 'edit';
+% if_thresh = fastif(settings.temporal_smoothing, { ' 1e-6 ' }, { 'NaN' 'enable' 'off' });
+% line.threshold = { {'Style' 'text' 'string' 'Relative threshold for convergence:'}, ...
+%     {'Style' style.threshold 'string' if_thresh{:} 'tag' 'threshold'} };
+% geo.threshold = {[1 .2]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.Nrepetitions geo.max_iterations ...
-    geo.smooth_info geo.smooth_width geo.smooth_weight geo.threshold];
-uilist = [line.info line.Nrepetitions line.max_iterations ...
-    line.smooth_info line.smooth_width line.smooth_weight line.threshold];
+geometry = [geo.info geo.Nrepetitions geo.max_iterations];
+uilist = [line.info line.Nrepetitions line.max_iterations];
 
 
 %% Create Popup
@@ -658,8 +652,7 @@ varg_check = { 'algorithm'  'string'    []         'Modified K-means';
     'Nmicrostates'  'real'    []         3:8;
     'sorting'  'string'    []         'Global explained variance';
     'verbose'  'integer'    []         1;
-    'normalise' 'integer'    []         1
-    'temporal_smoothing' 'integer'    []         0};
+    'normalise' 'integer'    []         1};
 
 % Fields to be moved to algorithm_settings substruct
 to_algoset = {'Nmicrostates', 'verbose'};
@@ -669,13 +662,10 @@ algo = find(strcmp('algorithm',vargs)) + 1;
 switch vargs{algo}
     case 'Modified K-means'
         varg_check = [varg_check;
-            { 'smooth_weight'  'real'    []         [];
-            'smooth_width'  'real'    []         [];
-            'Nrepetitions'  'integer'    []         10;
+            {'Nrepetitions'  'integer'    []         10;
             'max_iterations'  'integer'    []         1000;
             'threshold'  'real'    []         1e-6 } ];
-        to_algoset = [ to_algoset {'smooth_weight', 'smooth_width', ...
-            'Nrepetitions', 'max_iterations', 'threshold'} ];
+        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', 'threshold'} ];
     case 'Variational microstate analysis'
         varg_check = [varg_check;
             { 'Nrepetitions'  'integer'    []         10;
@@ -687,13 +677,9 @@ switch vargs{algo}
             'threshold', 'sig2_0', 'p0'} ];
     case 'K-means'
         varg_check = [varg_check;
-            { 'smooth_weight'  'real'    []         [];
-            'smooth_width'  'real'    []         [];
-            'Nrepetitions'  'integer'    []         10;
-            'max_iterations'  'integer'    []         1000;
-            'threshold'  'real'    []         1e-6 } ];
-        to_algoset = [ to_algoset {'smooth_weight', 'smooth_width', ...
-            'Nrepetitions', 'max_iterations', 'threshold'} ];
+            {'Nrepetitions'  'integer'    []         10;
+            'max_iterations'  'integer'    []         1000} ];
+        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations'} ];
     otherwise
         error(['selected algorithm,''' vargs{algo} ''' not available'])
 end
