@@ -1,10 +1,15 @@
 % pop_micro_segment() - select settings for segmentation into microstates
 %
-% Function for segmenting EEG into microstates using either Modified
-% K-means as descibed in [1], Variational microstates as described in [2],
-% ordinary K-means using Matlabs built in function (Stats Toolbox needed)
-% or Topographical Atomize-Agglomerate Hierarchical Clustering as described
-% in [3,4].
+% Function for segmenting EEG into microstates using one of several
+% selectable clustering methods:
+%  * Modified K-means as descibed in [1].
+%  * Ordinary K-means using Matlabs built in function (Stats Toolbox
+%    needed).
+%  * Atomize and Agglormerate Hierarchical Clustering (AAHC) as described
+%    in [2,3].
+%  * Topograhpical Atomize and Agglormerate Hierarchical Clustering (TAAHC)
+%    as described in [3,4].
+%  * Variational microstates as described in [5].
 %
 % Usage:
 %   >> EEG = pop_micro_segment ( EEG ); % pop up window
@@ -19,16 +24,16 @@
 %
 % Optional inputs:
 %  'algorithm'          - String denoting the algorithm used for
-%                         segmentation. ['Variational microstate analysis'|
-%                         'Modified K-means'|'K-means'|'Topographical
-%                         Atomize-Agglomerate Hierarchical Clustering'|]
-%                         (default: 'Modified K-means').
+%                         segmentation. Possible settings: 'kmeans' -
+%                         K-means; 'modkmeans' - Modified K-means; 'taahc' 
+%                         - see above; 'aahc' - see above; 'varmicro' -
+%                         Variational microstates. (Default: 'modkmeans').
 %  'Nmicrostates'       - Number of microstates to segment EEG into. If
 %                         vector then each value will be tested and the
 %                         optimum number of microstates selected based on
 %                         measures of fit (default: 3:8).
-%  'sorting'            - Method of sorting microstates. ['Global explained
-%                         variance'|'Chronological appearance'|'Frequency']
+%  'sorting'            - Method of sorting microstates. {'Global explained
+%                         variance','Chronological appearance','Frequency'}
 %                         (default: 'Global explained variance').
 %  'verbose'            - Print status messages to command window?
 %                         (default:1).
@@ -78,10 +83,13 @@
 %        Segmentation of brain electrical activity into microstates: model
 %        estimation and validation. IEEE Transactions on Biomedical
 %        Engineering.
-%  [2] - (unpublished manuscript). Variational microstate analysis.
-%  [3] - Murray, M. M., Brunet, D., & Michel, C. M. (2008). Topographic
+%  [2] - Murray, M. M., Brunet, D., & Michel, C. M. (2008). Topographic
 %        ERP analyses: A step-by-step tutorial review. Brain Topography.
+%  [3] - Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K.
+%        (unpublished manuscript). Microstate EEGlab toolbox: An
+%        introductionary guide.
 %  [4] - Brunet, D.(2011). Cartool reference Guide. Cartool v3.51.
+%  [5] - (unpublished manuscript). Variational microstate analysis.
 %
 % Author: Andreas Trier Poulsen, atpo@dtu.dk
 % Technical University of Denmark, Cognitive systems - February 2017
@@ -212,6 +220,28 @@ switch settings.algorithm
         % Res variables that should sorted alongside prototypes and labels.
         sort_names_opt = {};
         
+    case 'taahc'
+        % readying algorithm settings
+        K_range = settings.algorithm_settings.Nmicrostates;
+        opts.atom_ratio = 1;
+        opts.atom_measure = 'corr';
+        opts.verbose = settings.algorithm_settings.verbose;
+        
+        % running algorithm
+        [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
+            iaahc(data, K_range, opts);
+        
+    case 'aahc'
+        % readying algorithm settings
+        K_range = settings.algorithm_settings.Nmicrostates;
+        opts.atom_ratio = 1;
+        opts.atom_measure = 'GEV';
+        opts.verbose = settings.algorithm_settings.verbose;
+        
+        % running algorithm
+        [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
+            iaahc(data, K_range, opts);
+        
     otherwise
         error(['selected algorithm,''' settings.algorithm ''' not available'])
 end
@@ -226,6 +256,16 @@ EEG.microstate.Res.KL_nrm = KL_nrm;
 EEG.microstate.Res.W = W;
 EEG.microstate.Res.CV = CV;
 EEG.microstate.Res.GEV = GEV;
+
+
+%% Select active number of microstates
+% Only for algorithms which don't do this automatically
+if sum(strcmp(settings.algorithm,{'taahc','aahc'}))
+    [~, K_ind] = min(EEG.microstate.Res.CV);
+    
+    EEG.microstate.prototypes = EEG.microstate.Res.A_all{K_ind};
+    EEG.microstate.labels = EEG.microstate.Res.L_all{K_ind};
+end
 
 
 %% Sorting microstates according to chosen method
@@ -264,7 +304,7 @@ style.algorithm = 'popupmenu';
 dropdown_algo = {'K-means' 'Modified K-means'  ... % For dropdown menu
     'Topographical Atomize-Agglomerate Hierarchical Clustering' ...
     'Experimental algorithms'};
-popmenu.algorithm = {'kmeans' 'modkmeans' 'TAAHC' 'Experimental algorithms'}; % Corresponding calls for pop-function
+popmenu.algorithm = {'kmeans' 'modkmeans' 'taahc' 'Experimental algorithms'}; % Corresponding calls for pop-function
 algo_str = dropdown_algo{1}; %string for popupmenu
 for a = 2:length(dropdown_algo); algo_str = [algo_str '|' dropdown_algo{a}]; end
 line.algorithm = { {'Style' 'text' 'string' 'Choose algorithm:'}, ...
@@ -346,6 +386,8 @@ if ~strcmp(settings,'cancel')
             settings = modk_popup(settings);
         case 'kmeans'
             settings = kmeans_popup(settings);
+        case 'taahc'
+            settings = taahc_popup(settings);
         case 'Experimental algorithms'
             settings = experimental_popup(settings);
         otherwise
@@ -616,6 +658,50 @@ else
     settings = 'cancel';
 end
 end
+
+function settings = taahc_popup(settings)
+% Popup for unique input for the modified K-means algorithm
+%
+
+%% Create Inputs for popup
+% Title string
+info_str1 = 'Select whether to use ''TAAHC'' or ''AAHC''.';
+info_str2 = 'Note that ''TAAHC'' is not determistic in its initialisation like ''AAHC''. ';
+info_str3 = 'Therefore ''TAAHC'' might give different results for each run, unlike ''AAHC''.';
+line.info = { {'Style' 'text' 'string' info_str1} ...
+    {'Style' 'text' 'string' info_str2} ...
+    {'Style' 'text' 'string' info_str3} {} };
+geo.info = {1 1 1 1};
+
+% Choose algorithm
+style.algorithm = 'popupmenu';
+dropdown_algo = { 'Atomize-Agglomerate Hierarchical Clustering' % For dropdown menu
+    'Topographical Atomize-Agglomerate Hierarchical Clustering'};
+popmenu.algorithm = {'aahc' 'taahc'}; %corresponding calls for pop-function
+algo_str = dropdown_algo{1}; 
+for a = 2:length(dropdown_algo); algo_str = [algo_str '|' dropdown_algo{a}]; end;
+line.algorithm = { {'Style' 'text' 'string' 'Select algorithm:'}, ...
+    {'Style' style.algorithm 'string' algo_str 'tag' 'algorithm' 'value' 2} };
+geo.algorithm = {[1 1]};
+
+
+%% Order inputs for GUI
+geometry = [geo.info geo.algorithm];
+uilist = [line.info line.algorithm];
+
+
+%% Create Popup
+[~,~,~,pop_out] = inputgui( geometry, uilist, ...
+    'pophelp(''pop_micro_segment'');', 'Select TAAHC or AAHC -- pop_micro_segment()');
+
+
+%% Interpret output from popup
+if isstruct(pop_out)
+    settings = interpret_popup(pop_out, settings, style, popmenu);
+else
+    settings = 'cancel';
+end
+end
 % ----------------------------------------------------------------------- %
 
 % -------------------------- Helper functions --------------------------- %
@@ -647,6 +733,7 @@ function settings = check_settings(vargs)
 % Checks settings given as optional inputs for pop_micro_segment.
 % The function checks and rearranges optional inputs to pop_micro_segment.m
 % struct. Undefined inputs is set to default values.
+% Moves algorithm settings to the substruct 'settings.algorithm_settings'.
 %% General inputs
 varg_check = { 'algorithm'  'string'    []         'Modified K-means';
     'Nmicrostates'  'real'    []         3:8;
