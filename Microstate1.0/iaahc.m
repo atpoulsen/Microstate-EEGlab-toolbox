@@ -84,6 +84,7 @@ end
 
 
 %% Initialising
+X = double(X); % eigs only support double precision
 [C,N] = size(X);
 Kmin = min(K_range);
 
@@ -99,7 +100,7 @@ L_all = cell(N_K,1);
 % Cluster prototype and labels
 A = Xshuff./(ones(C,1)*sqrt(sum(Xshuff.*Xshuff,1))); % cluster means (normalised unit length)
 K = N;
-L = 1:N;
+Lshuff = 1:N;
 
 % initialise R assigment matrix (K x N)
 R = speye(N); % sparse assignment matrix
@@ -112,7 +113,7 @@ end
 
 
 %% Save means and prototypes if K is in K_range
-K_ind = find((K+1) == K_range);
+K_ind = find(K == K_range);
 if ~isempty(K_ind)
     A_all{K_ind} = A;
     
@@ -161,7 +162,7 @@ while K >= Kmin
         [Lshuff,~] = find(R); % labels
         A = nan(C,K);
         for k = 1:K
-            k_idx = L==k;
+            k_idx = Lshuff==k;
             if sum(k_idx) == 1 
                 A(:,k) = Xshuff(:,k_idx)/sqrt(Xshuff(:,k_idx)'*Xshuff(:,k_idx));
             else
@@ -187,14 +188,14 @@ while K >= Kmin
                 if verbose, fprintf('using global explained variance...'), end
                 fitmeas = nan(K,1);
                 for k = 1:K
-                    k_idx = L==k;
+                    k_idx = Lshuff==k;
                     fitmeas(k) = sum( GFP2(k_idx)/GFP2sum .* corr(Xshuff(:,k_idx),A(:,k)).^2 );
                 end
             case 'corr'
                 if verbose, fprintf('using summed squared correlation...'), end
                 fitmeas = nan(K,1);
                 for k = 1:K
-                    k_idx = L==k;
+                    k_idx = Lshuff==k;
                     fitmeas(k) = sum(corr(Xshuff(:,k_idx),A(:,k)).^2);
                 end
             case 'varex'
@@ -258,7 +259,7 @@ while K >= Kmin
         [Lshuff,~] = find(R); % labels
         A = nan(C,K);
         for k = 1:K
-            k_idx = L==k;
+            k_idx = Lshuff==k;
             if sum(k_idx) == 1 
                 A(:,k) = Xshuff(:,k_idx)/sqrt(Xshuff(:,k_idx)'*Xshuff(:,k_idx));
             else
@@ -276,7 +277,7 @@ while K >= Kmin
     end
     
     %% Save means and prototypes if K is in K_range
-    K_ind = find((K+1) == K_range);
+    K_ind = find(K == K_range); 
     if ~isempty(K_ind)
         A_all{K_ind} = A;
         

@@ -97,7 +97,7 @@
 % See also: eeglab
 
 % If adding new algorithms remember to:
-% * Add algorithm specific settings pop_up.
+% * Add an algorithm-specific pop_up window to input settings.
 % * Make sure check_settings is updated with new algorithm specific
 %   settings.
 % * add variable names from Res struct that should be sorted alongside 
@@ -231,6 +231,9 @@ switch settings.algorithm
         [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
             iaahc(data, K_range, opts);
         
+        % Res variables that should sorted alongside prototypes and labels.
+        sort_names_opt = {};
+        
     case 'aahc'
         % readying algorithm settings
         K_range = settings.algorithm_settings.Nmicrostates;
@@ -241,6 +244,9 @@ switch settings.algorithm
         % running algorithm
         [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
             iaahc(data, K_range, opts);
+        
+        % Res variables that should sorted alongside prototypes and labels.
+        sort_names_opt = {};
         
     otherwise
         error(['selected algorithm,''' settings.algorithm ''' not available'])
@@ -587,7 +593,7 @@ end
 end
 
 function settings = kmeans_popup(settings)
-% Popup for unique input for the modified K-means algorithm
+% Popup for unique input for the K-means algorithm
 %
 
 %% Create Inputs for popup
@@ -660,14 +666,14 @@ end
 end
 
 function settings = taahc_popup(settings)
-% Popup for unique input for the modified K-means algorithm
+% Popup for unique input for the (T)AAHC algorithm
 %
 
 %% Create Inputs for popup
 % Title string
 info_str1 = 'Select whether to use ''TAAHC'' or ''AAHC''.';
 info_str2 = 'Note that ''TAAHC'' is not determistic in its initialisation like ''AAHC''. ';
-info_str3 = 'Therefore ''TAAHC'' might give different results for each run, unlike ''AAHC''.';
+info_str3 = 'Therefore ''TAAHC'' (like K-means) might give different results each time it is used, unlike ''AAHC''.';
 line.info = { {'Style' 'text' 'string' info_str1} ...
     {'Style' 'text' 'string' info_str2} ...
     {'Style' 'text' 'string' info_str3} {} };
@@ -735,7 +741,7 @@ function settings = check_settings(vargs)
 % struct. Undefined inputs is set to default values.
 % Moves algorithm settings to the substruct 'settings.algorithm_settings'.
 %% General inputs
-varg_check = { 'algorithm'  'string'    []         'Modified K-means';
+varg_check = { 'algorithm'  'string'    []         'modkmeans';
     'Nmicrostates'  'real'    []         3:8;
     'sorting'  'string'    []         'Global explained variance';
     'verbose'  'integer'    []         1;
@@ -747,13 +753,13 @@ to_algoset = {'Nmicrostates', 'verbose'};
 %% Algorithm specifik inputs
 algo = find(strcmp('algorithm',vargs)) + 1;
 switch vargs{algo}
-    case 'Modified K-means'
+    case 'modkmeans'
         varg_check = [varg_check;
             {'Nrepetitions'  'integer'    []         10;
             'max_iterations'  'integer'    []         1000;
             'threshold'  'real'    []         1e-6 } ];
         to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', 'threshold'} ];
-    case 'Variational microstate analysis'
+    case 'varmicro'
         varg_check = [varg_check;
             { 'Nrepetitions'  'integer'    []         10;
             'max_iterations'  'integer'    []         1000;
@@ -762,11 +768,15 @@ switch vargs{algo}
             'p0'  'real'    []         [] } ];
         to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', ...
             'threshold', 'sig2_0', 'p0'} ];
-    case 'K-means'
+    case 'kmeans'
         varg_check = [varg_check;
             {'Nrepetitions'  'integer'    []         10;
             'max_iterations'  'integer'    []         1000} ];
         to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations'} ];
+    case 'taahc'
+        % no extra settings
+    case 'aahc'
+        % no extra settings
     otherwise
         error(['selected algorithm,''' vargs{algo} ''' not available'])
 end
@@ -991,6 +1001,11 @@ for K = K_range
     
     % check to see if a solution was found, otherwise skipping
     if isempty(A)
+        continue
+    end
+    
+    % check to see if more than one cluster was used, otherwise skipping
+    if size(A,2)==1
         continue
     end
     
