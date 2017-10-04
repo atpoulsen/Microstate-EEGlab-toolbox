@@ -229,7 +229,7 @@ switch settings.algorithm
         
         % running algorithm
         [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
-            iaahc(data, K_range, opts);
+            raahc(data, K_range, opts);
         
         % Res variables that should sorted alongside prototypes and labels.
         sort_names_opt = {};
@@ -243,7 +243,7 @@ switch settings.algorithm
         
         % running algorithm
         [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
-            iaahc(data, K_range, opts);
+            raahc(data, K_range, opts);
         
         % Res variables that should sorted alongside prototypes and labels.
         sort_names_opt = {};

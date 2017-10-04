@@ -1,4 +1,4 @@
-%IAAHC Interchanging Atomize and Agglomerate Hierarchical Clustering
+%RAAHC randomised Atomize and Agglomerate Hierarchical Clustering
 %  Performs hierachical clustering interchangingly by either agglomerating
 %  or atomizing one cluster at a time. The ratio at which either method is
 %  chosen can be set. The default settings are set to the Atomize and
@@ -9,7 +9,10 @@
 %  atomizing, the worst cluster is removed, and each its members assigned
 %  to the cluster whos prototype they are most correlated with as described
 %  in [1,2,3].
-%  Since TAAHC is sensitive to 
+%  Since atomizing using correlation (TAAHC) is sensitive to how it is
+%  initialised the order of samples are shuffled to make every start
+%  different, making it possible to find the best clustering of multiple
+%  runs of the algorithm. 
 %
 %  To start either AAHC [1] or Topograhpical Atomize and Agglormerate
 %  Hierarchical Clustering (TAAHC, as described in [2,3]) use these
@@ -57,8 +60,7 @@
 %          timepoint, for each number of microstates defined in K_range.
 %          The dimensions of each cell is (1 x samples).
 
-
-function [A_all, L_all] = iaahc(X,K_range,opts)
+function [A_all, L_all] = raahc(X,K_range,opts)
 %% Checking optional inputs
 if nargin < 3
    opts = []; 
