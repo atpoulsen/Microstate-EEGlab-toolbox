@@ -48,6 +48,8 @@
 %                      (default: 1000).
 %   'threshold'      - Threshold of convergence based on relative change
 %                      in noise variance (default: 1e-6).
+%   'fitmeas'        - Readying measure of fit for selecting best
+%                      segmentation (default: 'CV').
 %
 % * Variational microstates:
 %   'sig2_0'         - Prior variance of activations (default: average
@@ -180,9 +182,10 @@ switch settings.algorithm
             'reps' 'Nrepetitions';
             'max_iterations' 'max_iterations';
             'thresh' 'threshold';
-            'verbose' 'verbose'};
+            'verbose' 'verbose'
+            'fitmeas' 'fitmeas'};
         opts = algosettings_to_opts(settings,opts_settings_names);
-        opts.b = 0; % no post-segment smoothing
+        opts.b = 0; % no post-segment smoothing (done elsewhere in toolbox)
         
         K_range = settings.algorithm_settings.Nmicrostates;
         
@@ -419,6 +422,16 @@ line.Nrepetitions = { {'Style' 'text' 'string' 'No. of random initialisations:'}
     {'Style' style.Nrepetitions 'string' ' 10 ' 'tag' 'Nrepetitions'} };
 geo.Nrepetitions = {[1 .2]};
 
+% Choose algorithm
+style.fitmeas = 'popupmenu';
+dropdown_fitmeas = {'Cross validation criterion' 'Global explained variance'}; % For dropdown menu
+popmenu.fitmeas = {'mcv' 'GEV'}; % Corresponding calls for pop-function
+fitmeas_str = dropdown_fitmeas{1}; %string for popupmenu
+for f = 2:length(dropdown_fitmeas); fitmeas_str = [fitmeas_str '|' dropdown_fitmeas{f}]; end
+line.fitmeas = { {'Style' 'text' 'string' 'Measure of fit for selecting best segmentation:'}, ...
+    {'Style' style.fitmeas 'string' fitmeas_str 'tag' 'fitmeas' 'value' 1} };
+geo.fitmeas = {[1 1]};
+
 % Max iterations
 style.max_iterations = 'edit';
 line.max_iterations = { {'Style' 'text' 'string' 'Max. no. of iterations:'}, ...
@@ -452,8 +465,8 @@ geo.threshold = {[1 .2]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.Nrepetitions geo.max_iterations geo.threshold];
-uilist = [line.info line.Nrepetitions line.max_iterations line.threshold];
+geometry = [geo.info geo.Nrepetitions geo.max_iterations geo.threshold geo.fitmeas];
+uilist = [line.info line.Nrepetitions line.max_iterations line.threshold line.fitmeas];
 
 
 %% Create Popup
@@ -463,7 +476,8 @@ uilist = [line.info line.Nrepetitions line.max_iterations line.threshold];
 
 %% Interpret output from popup
 if isstruct(pop_out)
-    settings.algorithm_settings = interpret_popup(pop_out, settings.algorithm_settings, style);
+    settings.algorithm_settings = interpret_popup(pop_out, ...
+        settings.algorithm_settings, style, popmenu);
 else
     settings = 'cancel';
 end
@@ -757,8 +771,9 @@ switch vargs{algo}
         varg_check = [varg_check;
             {'Nrepetitions'  'integer'    []         10;
             'max_iterations'  'integer'    []         1000;
-            'threshold'  'real'    []         1e-6 } ];
-        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', 'threshold'} ];
+            'threshold'  'real'    []         1e-6 ;
+            'fitmeas'  'string'    []         'CV' } ];
+        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', 'threshold', 'CV'} ];
     case 'varmicro'
         varg_check = [varg_check;
             { 'Nrepetitions'  'integer'    []         10;
@@ -1057,7 +1072,7 @@ for K = K_range
     end
     
     % Z (not for ordinary Kmeans)
-    if ~strcmp(EEG.microstate.algorithm,'K-means')
+    if ~strcmp(EEG.microstate.algorithm,'kmeans')
         EEG.microstate.Res.Z_all{K_ind} = EEG.microstate.Res.Z_all{K_ind}(idx,:);
     end
     

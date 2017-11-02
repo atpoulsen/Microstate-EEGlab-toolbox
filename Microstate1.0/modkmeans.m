@@ -40,6 +40,8 @@ function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %                        in noise variance (default: 1e-6). 
 %       verbose        - Print status messages to command window?
 %                        (default:1).
+%       fitmeas        - Readying measure of fit for selecting best
+%                        segmentation (default: 'CV').
 %
 %  Outputs
 %  A_opt   - Spatial distribution of microstates (channels x K).
@@ -77,6 +79,8 @@ if ~isfield(opts,'verbose'), opts.verbose = 1; end
 if ~isfield(opts,'thresh'), opts.thresh = 1e-6; end
 if ~isfield(opts,'lambda'),	opts.lambda = 5; end
 if ~isfield(opts,'b'), opts.b = 0; end
+if ~isfield(opts,'fitmeas'), opts.fitmeas = 'CV'; end
+fitmeas = opts.fitmeas;
 
 if opts.b==0 % Checking if smoothing is requested
     opts.smooth = 0;
@@ -95,8 +99,21 @@ MSE_all = nan(N_K,1);
 sig2_all = nan(N_K,1);
 
 
+%% Readying measure of fit for selecting best segmentation
+switch fitmeas
+    case 'GEV'
+        GFP = std(X);
+        GFP_const = sum(GFP.^2);
+        GEV_opt = 0;
+    case 'CV'
+        sig2_mcv_opt = inf;
+    otherwise
+        error('Unknown measuref of fit requested: %s',fitmeas)
+end
+new_best = 0;
+
+
 %% Looping over all K values in K_range
-sig2_mcv_opt = inf;
 K_ind = 0;
 if opts.verbose
     if opts.smooth
@@ -113,8 +130,15 @@ for K = K_range
             ,K_ind,N_K,opts.reps, K)
     end
     
-    % Finding best fit amongst a given number of restarts 
-    sig2_best = inf;
+    % Finding best fit amongst a given number of restarts based on selected
+    % measure of fit
+    switch fitmeas 
+        case 'GEV'
+            GEV_best = 0;
+        case 'CV'
+            sig2_all(K_ind) = inf;
+    end
+    
     for r = 1:opts.reps
         if opts.verbose
             fprintf('Starting initialisations no. %i out of %i. '...
@@ -141,27 +165,45 @@ for K = K_range
             if opts.verbose, fprintf('\n'), end
         end
         
-        % Checking for best fit. We use sig2 instead of R2 as they are
-        % proportional
-        if sig2 < sig2_best
+        % Checking for best fit. 
+        switch fitmeas
+            case 'GEV'
+                map_corr = columncorr(X,A(:,L));
+                GEV = sum((GFP.*map_corr).^2) / GFP_const;
+                if GEV > GEV_best, new_best = 1; GEV_best = GEV; end
+            case 'CV'
+                % We use sig2 instead of R2 as they are proportional
+                if sig2 < sig2_all(K_ind), new_best = 1; sig2_all(K_ind) = sig2; end
+        end
+        
+        if new_best
             A_all{K_ind} = A;
             L_all{K_ind} = L;
-            sig2_best = sig2;
             sig2_all(K_ind) = sig2;
             Z_all{K_ind} = Z;
             R2_all(K_ind) = R2;
             MSE_all(K_ind) = MSE;
+            new_best = 0;
         end
                
     end
     
-    sig2_mcv(K_ind) = sig2_best * ((C-1)^-1 * (C-1-K))^-2;
+    sig2_mcv(K_ind) = sig2_all(K_ind) * ((C-1)^-1 * (C-1-K))^-2;
     
-    if sig2_mcv(K_ind) < sig2_mcv_opt
+    % Checking for best fit for different values of K.
+    switch fitmeas
+        case 'GEV'
+            if GEV_best > GEV_opt, new_best = 1; GEV_opt = GEV_best; end
+        case 'CV'
+            % We use sig2 instead of R2 as they are proportional
+            if sig2_mcv(K_ind) < sig2_mcv_opt, new_best = 1; sig2_mcv_opt = sig2_mcv(K_ind); end
+    end
+    
+    if new_best
         A_opt = A_all{K_ind};
         L_opt = L_all{K_ind};
-        sig2_mcv_opt = sig2_mcv(K_ind);
         K_act = K;
+        new_best = 0;
     end
 
 end
@@ -311,6 +353,20 @@ for n=1:N; activations(L(n),n) = Z(L(n),n); end % setting to zero
 MSE = mean(mean((X-A*activations).^2));
 end
 
+function C2 = columncorr(A,B)
+% Fast way to compute correlation of multiple pairs of vectors without
+% computing all pairs as would with corr(A,B). Borrowed from Oli at Stack
+% overflow. Note the resulting coefficients vary slightly from the ones
+% obtained from corr due differences in the order of the calculations.
+% (Differences are of a magnitude of 1e-9 to 1e-17 depending of the tested
+% data).
 
+An=bsxfun(@minus,A,mean(A,1));
+Bn=bsxfun(@minus,B,mean(B,1));
+An=bsxfun(@times,An,1./sqrt(sum(An.^2,1)));
+Bn=bsxfun(@times,Bn,1./sqrt(sum(Bn.^2,1)));
+C2=sum(An.*Bn,1);
+
+end
 
 
