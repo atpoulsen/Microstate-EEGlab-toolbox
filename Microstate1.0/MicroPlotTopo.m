@@ -125,7 +125,12 @@ topoheight = pos(4)/Nrows * (1-head_sep_y*(Nrows-1)/Nrows); % height of each top
 
 % recompute head seperations in the x and y direcetions
 x_sep = (pos(3) - ylabel_space - K_max*topowidth) / (K_max-1);
-y_sep = (pos(4) - Nrows*topoheight) / (Nrows-1);
+
+if Nrows~=1
+    y_sep = (pos(4) - Nrows*topoheight) / (Nrows-1);
+else
+    y_sep = 0;
+end
 
 
 %% Plot the topoplots
