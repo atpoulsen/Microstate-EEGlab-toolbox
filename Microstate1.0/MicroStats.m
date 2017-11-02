@@ -88,20 +88,20 @@ if Ntrials > 1 % for epoched data
 end
 
 % Normalise EEG and maps (average reference and gfp = 1 for EEG)
-X = X ./ repmat(std(X,1), C, 1); % already have average reference
+Xnrm = X ./ repmat(std(X,1), C, 1); % already have average reference
 A_nrm = (A - repmat(mean(A,1), C, 1)) ./ repmat(std(A,1), C, 1);
 
 % Global map dissilarity
 GMD = nan(K,N);
 for k = 1:K
-    GMD(k,:) = sqrt(mean( (X - repmat(A_nrm(:,k),1,N)).^2 ));
+    GMD(k,:) = sqrt(mean( (Xnrm - repmat(A_nrm(:,k),1,N)).^2 ));
 end
 
 % Account for polarity (recommended 0 for spontaneous EEG)
 if polarity == 0
     GMDinvpol = nan(K,N);
     for k = 1:K
-        GMDinvpol(k,:) = sqrt(mean( (X - repmat(-A_nrm(:,k),1,size(X,2))).^2));
+        GMDinvpol(k,:) = sqrt(mean( (Xnrm - repmat(-A_nrm(:,k),1,size(Xnrm,2))).^2));
     end
     idx = GMDinvpol < GMD;
     GMD(idx) = GMDinvpol(idx);
