@@ -25,7 +25,7 @@
 % Optional inputs:
 %   ALLEEG           - EEGlab structure containing all datasets read into
 %                      EEGlab as EEG structures.
-%  'datatype'        - 'continuous','ERP'.
+%  'datatype'        - 'spontaneous','ERP'.
 %  'dataset_idx'     - Indices for datasets in ALLEEG to aggragate data
 %                      from. Leave empty to use current dataset (default).
 %  'avgref'          - Calculate average reference. 1 - yes (default), 
@@ -121,8 +121,8 @@ else
 end
 
 
-%% do the aggregation for continuous or erp data
-if strcmp(settings.datatype,'Continuous')
+%% do the aggregation for spontaneous or erp data
+if strcmp(settings.datatype,'spontaneous')
     %% Readying settings for countinuous data 
     Npeaks = settings.Npeaks;
     MinPeakDist  = settings.MinPeakDist;
@@ -307,7 +307,7 @@ geo.info = {1 1 1};
 
 % Datatype
 style.datatype = 'popupmenu';
-popmenu.datatype = {'ERP' 'Continuous'};
+popmenu.datatype = {'ERP' 'spontaneous'};
 data_str = popmenu.datatype{1}; %string for popupmenu
 for data_idx = 2:length(popmenu.datatype); data_str = [data_str '|' popmenu.datatype{data_idx}]; end;
 line.datatype = { {'Style' 'text' 'string' 'Datatype:'}, ...
@@ -396,8 +396,8 @@ if isstruct(pop_out)
     settings.dataset_idx = dataset_idx;
     settings = rmfield(settings,'aggregate_data');
     
-    % remove settings related continuous data
-    if ~strcmp(settings.datatype,'Continuous')
+    % remove settings related spontaneous data
+    if ~strcmp(settings.datatype,'spontaneous')
        settings = rmfield(settings,'MinPeakDist');
        settings = rmfield(settings,'Npeaks');
        settings = rmfield(settings,'GFPthresh');
@@ -445,8 +445,8 @@ varg_check = {  'datatype'         'string'	[]	'ERP';
 % Checking if datatype is defined
 dat_ind = find(strcmp(vargs, 'datatype'));
 if ~isempty(dat_ind)
-    if strcmp(lower(vargs{dat_ind+1}), 'continuous');
-        % Adding check for continuous data related settings
+    if strcmp(lower(vargs{dat_ind+1}), 'spontaneous')
+        % Adding check for spontaneous data related settings
         varg_check = [varg_check;
             {'MinPeakDist'  'real'    []         10;
             'Npeaks'  'integer'    []         1000;
@@ -460,7 +460,7 @@ end
 
 function NewEEG = check_datasets_consistency(ALLEEG)
 %% checks if basic parameters of EEG data are consistent between datasets.
-%% and creates new EEG structure that will later be filled depending on the type of data (continuous, ERP)
+%% and creates new EEG structure that will later be filled depending on the type of data (spontaneous, ERP)
 
 if isequal(ALLEEG(:).nbchan) &&  isequal(ALLEEG(:).srate); % number of channels and sampling rate
     % Create a clean EEG structure that is used to store data.

@@ -55,6 +55,8 @@
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 function [KL, KL_nrm, W, CV, GEV] = calc_fitmeas(X,A_all,L_all)
 %% Initialisation
+GFP = std(X);
+
 if iscell(A_all)
     NKs = length(A_all);
 else
@@ -84,7 +86,6 @@ for K_ind = 1:NKs
     
     
     %% GEV
-    GFP = std(X);
     % Calculating and summing GEV over all timepoints for the corresponding active microstates
     map_corr = columncorr(X,A(:,L));
     GEV(K_ind) = sum((GFP.*map_corr).^2) / sum(GFP.^2);
