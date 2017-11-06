@@ -13,7 +13,7 @@
 %   A - Spatial distribution of microstate prototypes (channels x K).
 %
 %  Optional input:
-%   polarity - Account for polarity when fitting Typically off for
+%   polarity - Account for polarity when fitting. Typically off for
 %              spontaneous EEG and on for ERP data (default = 0).
 %
 %  Output:
@@ -75,14 +75,15 @@ X = X ./ repmat(std(X,1), C, 1); % already have average reference
 A = (A - repmat(mean(A,1), C, 1)) ./ repmat(std(A,1), C, 1);
 
 % Global map dissilarity
-GMD = nan(K,N);
+GMD = nan(K,N*T);
 for k = 1:K
-    GMD(k,:) = sqrt(mean( (X - repmat(A(:,k),1,N)).^2 ));
+    GMD(k,:) = sqrt(mean( (X - repmat(A(:,k),1,N*T)).^2 ));
 end
 
-% Account for polarity (recommended 0 for spontaneous EEG)
+% Account for polarity? (recommended 0 for spontaneous EEG)
 if polarity == 0
-    GMDinvpol = nan(K,N);
+    % Polarity invariance
+    GMDinvpol = nan(K,N*T);
     for k = 1:K
         GMDinvpol(k,:) = sqrt(mean( (X - repmat(-A(:,k),1,size(X,2))).^2));
     end

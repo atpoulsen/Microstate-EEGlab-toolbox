@@ -63,12 +63,14 @@ if nargin < 3
     if ~confirmed
         return
     end
-end;
+end
 
 
 %% Import microstate maps
-if isfield(EEG.microstate,'prototypes')
-   warning('Overwriting existing prototypes in dataset.') 
+if isfield(EEG,'microstate')
+    if isfield(EEG.microstate,'prototypes')
+        warning('Overwriting existing prototypes in dataset.')
+    end
 end
 
 if ~isfield(ALLEEG(dataset_idx).microstate,'prototypes')
