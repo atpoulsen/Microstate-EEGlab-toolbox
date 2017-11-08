@@ -1,1 +1,1 @@
-this is a test of mirroring git.
+this is a test of mirroring git. Test2.
