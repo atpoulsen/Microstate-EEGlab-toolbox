@@ -1,1 +1,0 @@
-this is a test of mirroring git. Test2. Test 3. Validation.
