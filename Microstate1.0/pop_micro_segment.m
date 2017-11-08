@@ -773,7 +773,7 @@ switch vargs{algo}
             'max_iterations'  'integer'    []         1000;
             'threshold'  'real'    []         1e-6 ;
             'fitmeas'  'string'    []         'CV' } ];
-        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', 'threshold', 'CV'} ];
+        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', 'threshold', 'fitmeas'} ];
     case 'varmicro'
         varg_check = [varg_check;
             { 'Nrepetitions'  'integer'    []         10;
