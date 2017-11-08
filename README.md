@@ -1,6 +1,6 @@
 ##Microstate EEGlab toolbox
 
-Extention for EEGlab, enabling microstate analysis in Matlab. Includes full GUI support and ability to run from command window. At the moment v1.0 is continously updated, though it should be stable.
+Extention for EEGlab, enabling microstate analysis in Matlab. Includes full GUI support and ability to run from command window. At the moment v1.0 is continuously updated, though it should be stable.
 
 A guide to the toolbox is coming soon.
 
