@@ -229,6 +229,8 @@ switch settings.algorithm
         opts.atom_ratio = 1;
         opts.atom_measure = 'corr';
         opts.verbose = settings.algorithm_settings.verbose;
+        opts.determinism = settings.algorithm_settings.determinism;
+        opts.polarity = settings.algorithm_settings.polarity;
         
         % running algorithm
         [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
@@ -243,6 +245,8 @@ switch settings.algorithm
         opts.atom_ratio = 1;
         opts.atom_measure = 'GEV';
         opts.verbose = settings.algorithm_settings.verbose;
+        opts.determinism = settings.algorithm_settings.determinism;
+        opts.polarity = settings.algorithm_settings.polarity;
         
         % running algorithm
         [EEG.microstate.Res.A_all, EEG.microstate.Res.L_all] = ...
@@ -685,13 +689,8 @@ function settings = taahc_popup(settings)
 
 %% Create Inputs for popup
 % Title string
-info_str1 = 'Select whether to use ''TAAHC'' or ''AAHC''.';
-info_str2 = 'Note that ''TAAHC'' is not determistic in its initialisation like ''AAHC''. ';
-info_str3 = 'Therefore ''TAAHC'' (like K-means) might give different results each time it is used, unlike ''AAHC''.';
-line.info = { {'Style' 'text' 'string' info_str1} ...
-    {'Style' 'text' 'string' info_str2} ...
-    {'Style' 'text' 'string' info_str3} {} };
-geo.info = {1 1 1 1};
+line.info = { {'Style' 'text' 'string' 'Select whether to use ''TAAHC'' or ''AAHC''.'} };
+geo.info = {1};
 
 % Choose algorithm
 style.algorithm = 'popupmenu';
@@ -704,10 +703,28 @@ line.algorithm = { {'Style' 'text' 'string' 'Select algorithm:'}, ...
     {'Style' style.algorithm 'string' algo_str 'tag' 'algorithm' 'value' 2} };
 geo.algorithm = {[1 1]};
 
+% Determinism?
+style.determinism = 'checkbox';
+det_tipstr = sprintf(['Initialise by creating two-sample clusters from the most correlated pairs.\n' ...
+    'Note that ''TAAHC'' is not determistic without this initialisation like ''AAHC'' is. ' ...
+'Therefore ''TAAHC'' (like K-means) might give different results each time it is used, unlike ''AAHC''.\n'...
+'This initialisation scheme is therefore not necessary for ''AAHC'' to ensure determinism.']);
+line.determinism = { {'Style' style.determinism 'value' 1 'string' ...
+    'TAAHC initialisation scheme for making the clustering determinate.' ...
+    'tooltipstring' det_tipstr 'tag' 'determinism'} };
+geo.determinism = {1};
+
+% Polarity?
+style.polarity = 'checkbox';
+pol_tipstr = 'Is usually off for (T)AAHC and in general for spontaneous EEG.';
+line.polarity = { {'Style' style.polarity 'value' 0 'string' 'Account for polarity when fitting?' ...
+    'tooltipstring' pol_tipstr 'tag' 'polarity'} };
+geo.polarity = {1};
+
 
 %% Order inputs for GUI
-geometry = [geo.info geo.algorithm];
-uilist = [line.info line.algorithm];
+geometry = [geo.info geo.algorithm geo.determinism geo.polarity];
+uilist = [line.info line.algorithm line.determinism line.polarity];
 
 
 %% Create Popup
@@ -717,7 +734,11 @@ uilist = [line.info line.algorithm];
 
 %% Interpret output from popup
 if isstruct(pop_out)
-    settings = interpret_popup(pop_out, settings, style, popmenu);
+    settings.algorithm_settings = interpret_popup(pop_out, settings.algorithm_settings, ...
+        style, popmenu);
+    % moving algorith to settings
+    settings.algorithm = settings.algorithm_settings.algorithm;
+    settings.algorithm_settings = rmfield(settings.algorithm_settings,'algorithm');
 else
     settings = 'cancel';
 end
@@ -789,14 +810,20 @@ switch vargs{algo}
             'max_iterations'  'integer'    []         1000} ];
         to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations'} ];
     case 'taahc'
-        % no extra settings
+        varg_check = [varg_check;
+            {'determinism'  'integer'    []         1;
+            'polarity'  'integer'    []         0} ];
+        to_algoset = [ to_algoset {'determinism', 'polarity'} ];
     case 'aahc'
-        % no extra settings
+                varg_check = [varg_check;
+            {'determinism'  'integer'    []         0;
+            'polarity'  'integer'    []         0} ];
+        to_algoset = [ to_algoset {'determinism', 'polarity'} ];
     otherwise
         error(['selected algorithm,''' vargs{algo} ''' not available'])
 end
 settings = finputcheck( vargs, varg_check);
-if ischar(settings), error(settings); end; % check for error
+if ischar(settings), error(settings); end % check for error
 
 
 %% Moving relevant fields to algorithm_settings substruct
