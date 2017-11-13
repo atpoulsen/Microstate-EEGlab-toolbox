@@ -51,6 +51,17 @@
 %   'fitmeas'        - Readying measure of fit for selecting best
 %                      segmentation (default: 'CV').
 %
+% * TAAHC:
+%   'polarity'       - Account for polarity? Only influences the
+%                      atom_measures 'GEV', 'corr', and the 'detererminate'
+%                      initialisation (ignored for other measures). If set
+%                      to 0, the sign of correlation is ignored. (default:
+%                      0).
+%   'determinism'    - TAAHC initialisation scheme for making the
+%                      clustering determinate. Initialises by so every
+%                      cluster consists of two samples, by agglomarating
+%                      the most correlated samples. (default: 0).
+%
 % * Variational microstates:
 %   'sig2_0'         - Prior variance of activations (default: average
 %                      EEG channel variance).
