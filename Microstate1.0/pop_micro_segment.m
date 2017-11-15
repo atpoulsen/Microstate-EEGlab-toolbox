@@ -440,7 +440,7 @@ geo.Nrepetitions = {[1 .2]};
 % Choose algorithm
 style.fitmeas = 'popupmenu';
 dropdown_fitmeas = {'Cross validation criterion' 'Global explained variance'}; % For dropdown menu
-popmenu.fitmeas = {'mcv' 'GEV'}; % Corresponding calls for pop-function
+popmenu.fitmeas = {'CV' 'GEV'}; % Corresponding calls for pop-function
 fitmeas_str = dropdown_fitmeas{1}; %string for popupmenu
 for f = 2:length(dropdown_fitmeas); fitmeas_str = [fitmeas_str '|' dropdown_fitmeas{f}]; end
 line.fitmeas = { {'Style' 'text' 'string' 'Measure of fit for selecting best segmentation:'}, ...
