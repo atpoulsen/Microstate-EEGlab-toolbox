@@ -25,9 +25,9 @@ function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %  Inputs
 %  X       - EEG (channels x samples).
 %  K_range - A priori number of microstates. Can be a vector.
-%  
+%
 %  Optional inputs
-%  opts. 
+%  opts.
 %       b              - Smoothing width. Denotes the samples on each side
 %                        of current sample (default: 0). Setting to zero
 %                        turns smoothing off.
@@ -37,11 +37,13 @@ function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %       max_iterations - Maximum number of iterations of algorithm
 %                        (default: 1000).
 %       thresh         - Threshold of convergence based on relative change
-%                        in noise variance (default: 1e-6). 
+%                        in noise variance (default: 1e-6).
 %       verbose        - Print status messages to command window?
 %                        (default:1).
 %       fitmeas        - Readying measure of fit for selecting best
-%                        segmentation (default: 'CV').
+%                        segmentation. 'CV': Crossvalidation criterion,
+%                        'GEV': Global explained variance, 'dispersion':
+%                        Dispersion of clusters. (default: 'CV').
 %
 %  Outputs
 %  A_opt   - Spatial distribution of microstates (channels x K).
@@ -107,6 +109,8 @@ switch fitmeas
         GEV_opt = 0;
     case 'CV'
         sig2_mcv_opt = inf;
+    case 'dispersion'
+        W_opt = inf;
     otherwise
         error('Unknown measuref of fit requested: %s',fitmeas)
 end
@@ -132,11 +136,13 @@ for K = K_range
     
     % Finding best fit amongst a given number of restarts based on selected
     % measure of fit
-    switch fitmeas 
+    switch fitmeas
         case 'GEV'
             GEV_best = 0;
         case 'CV'
             sig2_all(K_ind) = inf;
+        case 'dispersion'
+            W_best = inf;
     end
     
     for r = 1:opts.reps
@@ -165,7 +171,7 @@ for K = K_range
             if opts.verbose, fprintf('\n'), end
         end
         
-        % Checking for best fit. 
+        % Checking for best fit.
         switch fitmeas
             case 'GEV'
                 map_corr = columncorr(X,A(:,L));
@@ -174,6 +180,9 @@ for K = K_range
             case 'CV'
                 % We use sig2 instead of R2 as they are proportional
                 if sig2 < sig2_all(K_ind), new_best = 1; sig2_all(K_ind) = sig2; end
+            case 'dispersion'
+                W = calc_dispersion(X,L,K);
+                if W < W_best, new_best = 1; W_best = W; end
         end
         
         if new_best
@@ -185,7 +194,6 @@ for K = K_range
             MSE_all(K_ind) = MSE;
             new_best = 0;
         end
-               
     end
     
     sig2_mcv(K_ind) = sig2_all(K_ind) * ((C-1)^-1 * (C-1-K))^-2;
@@ -197,6 +205,8 @@ for K = K_range
         case 'CV'
             % We use sig2 instead of R2 as they are proportional
             if sig2_mcv(K_ind) < sig2_mcv_opt, new_best = 1; sig2_mcv_opt = sig2_mcv(K_ind); end
+        case 'dispersion'
+            if W_best < W_opt, new_best = 1; W_opt = W_best; end
     end
     
     if new_best
@@ -205,7 +215,7 @@ for K = K_range
         K_act = K;
         new_best = 0;
     end
-
+    
 end
 
 
@@ -283,7 +293,7 @@ end
 function [L,sig2,R2,MSE,ind] = smoothing(X,A,K,const1,opts)
 %  Implementation of the Segmentation Smoothing Algorithm, as described in
 %  Table II of [1]. Smoothes using the interval t-b to t+b excluding t.
-%  Note, that temporary allocation of labels (denoted with Lambda in [1]) 
+%  Note, that temporary allocation of labels (denoted with Lambda in [1])
 %  is not necessary in this implementation, and steps 3 and 6 are therefore
 %  left out.
 
@@ -304,7 +314,7 @@ sig2 = Inf;
 Z = A'*X;
 [~,L] = max(Z.^2);
 
-%Check to avoid the loop getting caught and switching one label back and 
+%Check to avoid the loop getting caught and switching one label back and
 % forth between iterations.
 L_old{1} = zeros(size(L));
 L_old{2} = zeros(size(L));
@@ -321,7 +331,7 @@ clear tmp
 %% Iterations (step 5 to 8)
 ind = 0;
 while abs(sig2_old-sig2) >= thresh*sig2 && max_iterations>ind ...
-    && mean(L_old{rem(ind,2)+1} == L)~=1
+        && mean(L_old{rem(ind,2)+1} == L)~=1
     ind = ind + 1;
     sig2_old = sig2;
     L_old{abs(rem(ind,2)-2)} = L;
@@ -369,4 +379,17 @@ C2=sum(An.*Bn,1);
 
 end
 
-
+function W = calc_dispersion(X,L,K)
+% Calculate dispersion. Same code as in calc_fitmeas.m
+Dk = nan(K,1);
+Nk = nan(K,1);
+for k = 1:K
+    cluster = X(:,L==k);
+    Nk(k) = size(cluster,2);
+    clstrsq = dot(cluster,cluster,1);
+    %sum of pair-wise distance between all maps of cluster k
+    Dk(k) = sum(sum(bsxfun(@plus,clstrsq',clstrsq)-2*(cluster'*cluster)));
+end
+idx = Nk ~= 0; % in case of empty clusters
+W = (1./(2*Nk(idx)))' * Dk(idx);
+end

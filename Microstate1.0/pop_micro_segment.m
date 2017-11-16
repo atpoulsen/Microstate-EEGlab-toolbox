@@ -289,6 +289,7 @@ if sum(strcmp(settings.algorithm,{'taahc','aahc'}))
     
     EEG.microstate.prototypes = EEG.microstate.Res.A_all{K_ind};
     EEG.microstate.labels = EEG.microstate.Res.L_all{K_ind};
+    EEG.microstate.Res.K_act = EEG.microstate.algorithm_settings.Nmicrostates(K_ind);
 end
 
 
@@ -439,8 +440,9 @@ geo.Nrepetitions = {[1 .2]};
 
 % Choose algorithm
 style.fitmeas = 'popupmenu';
-dropdown_fitmeas = {'Cross validation criterion' 'Global explained variance'}; % For dropdown menu
-popmenu.fitmeas = {'CV' 'GEV'}; % Corresponding calls for pop-function
+dropdown_fitmeas = {'Cross validation criterion' 'Global explained variance' ...
+    'Cluster dispersion'}; % For dropdown menu
+popmenu.fitmeas = {'CV' 'GEV' 'dispersion'}; % Corresponding calls for pop-function
 fitmeas_str = dropdown_fitmeas{1}; %string for popupmenu
 for f = 2:length(dropdown_fitmeas); fitmeas_str = [fitmeas_str '|' dropdown_fitmeas{f}]; end
 line.fitmeas = { {'Style' 'text' 'string' 'Measure of fit for selecting best segmentation:'}, ...
@@ -1109,8 +1111,8 @@ for K = K_range
         EEG.microstate.Res.L_all{K_ind}(L==idx(k)) = k;
     end
     
-    % Z (not for ordinary Kmeans)
-    if ~strcmp(EEG.microstate.algorithm,'kmeans')
+    % Z if available (not for ordinary Kmeans for (T)AAHC)
+    if isfield(EEG.microstate.Res,'Z_all')
         EEG.microstate.Res.Z_all{K_ind} = EEG.microstate.Res.Z_all{K_ind}(idx,:);
     end
     
