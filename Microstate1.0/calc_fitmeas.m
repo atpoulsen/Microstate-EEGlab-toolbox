@@ -105,10 +105,21 @@ for K_ind = 1:NKs
         clstrsq = dot(cluster,cluster,1);
         %sum of pair-wise distance between all maps of cluster k
         Dk(k) = sum(sum(bsxfun(@plus,clstrsq',clstrsq)-2*(cluster'*cluster)));
+        
+        % polarity invariant
+%         cluster_corr = abs(corr(cluster));
+%         cluster_corr_pairs = triu(cluster_corr,1);
+%         Dk2(k) = mean(cluster_corr_pairs(:));
+        
     end
     idx = Nk ~= 0; % in case of empty clusters
     W(K_ind) = (1./(2*Nk(idx)))' * Dk(idx);
     M(K_ind) = W(K_ind)*K^(2/C); %for KL
+    
+    % polarity invariant
+%     W2(K_ind) = mean(Dk2);
+%     M2(K_ind) = W2(K_ind)*K^(2/C); %for KL
+    
 end
 
 
@@ -156,10 +167,10 @@ else
     % KL=abs(diff(K)/diff(K+1)), excludes last segmentation
     KL(1:end-1) = abs(diff(1:end-1) ./ diff(2:end));
     
-    % Added rule that diff(K) cannot be negative, i.e. M increases from K-1
-    % to K.
-    idx1 = diff<0;
-    KL(idx1) = 0;
+    % Added rule that W(K) - W(K-1) cannot be positive, i.e. W increases from K-1
+    % to K.    
+    idx_KL = [false; W(2:end) - W(1:end-1)];
+    KL(idx_KL>0) = 0;
     KL([1 end]) = nan;
 end
 
