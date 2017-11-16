@@ -17,8 +17,10 @@
 %  To start either AAHC [1] or Topograhpical Atomize and Agglormerate
 %  Hierarchical Clustering (TAAHC, as described in [2,3]) use these
 %  settings:
-%   * AAHC : opts.atom_ratio = 1; opts.atom_measure = 'GEV'.
-%   * TAAHC: opts.atom_ratio = 1; opts.atom_measure = 'corr'.
+%   * AAHC : opts.atom_ratio = 1; opts.atom_measure = 'GEV';
+%            opts.determinism = 0.
+%   * TAAHC: opts.atom_ratio = 1; opts.atom_measure = 'corr';
+%            opts.determinism = 1.
 %
 %  [1] - Murray, M. M., Brunet, D., & Michel, C. M. (2008). Topographic
 %        ERP analyses: A step-by-step tutorial review. Brain Topography.
@@ -266,7 +268,10 @@ while K >= Kmin
         [~,k1] = max(angle_sort(:,1));   % first member of closest pair
         k2 = sort_idx(k1,1); % second member of closest pair
         R(k1,:) = R(k1,:) + R(k2,:);   % joint membership of the two clusters
-        R = R(1:end~=k2,:); % remove 2nd cluster by contracting the R matrix
+        
+        % remove 2nd cluster by contracting the R and A matrix
+        R = R(1:end~=k2,:);
+        A = A(:,1:end~=k2);
         K = size(R,1); % update K
         
         %sanity check that we did not loose members
@@ -276,19 +281,17 @@ while K >= Kmin
             error('Lost member')
         end
         
-        % compute new cluster prototypes and labels
+        % compute new cluster prototypes and labels for the agglomerated
+        % cluster
         [Lshuff,~] = find(R); % labels
-        A = nan(C,K);
-        for k = 1:K
-            k_idx = Lshuff==k;
-            if sum(k_idx) == 1
-                A(:,k) = Xshuff(:,k_idx)/sqrt(Xshuff(:,k_idx)'*Xshuff(:,k_idx));
-            else
-                % Use 1st PC => polarity invariant, like Pacual-Marqui (1995).
-                Sigk=Xshuff(:,k_idx)*Xshuff(:,k_idx)';
-                [Ak, ~] = eigs(Sigk,1);
-                A(:,k)=Ak;
-            end
+        k_idx = Lshuff==k1;
+        if sum(k_idx) == 1
+            A(:,k) = Xshuff(:,k_idx)/sqrt(Xshuff(:,k_idx)'*Xshuff(:,k_idx));
+        else
+            % Use 1st PC => polarity invariant, like Pacual-Marqui (1995).
+            Sigk=Xshuff(:,k_idx)*Xshuff(:,k_idx)';
+            [Ak, ~] = eigs(Sigk,1);
+            A(:,k)=Ak;
         end
         
         if verbose
@@ -348,21 +351,30 @@ while K >= Kmin
         [~,atomC_idx] = min(fitmeas); % index of worst cluster
         atomX_idx = find(R(atomC_idx,:)==1); % indices of members of cluster
         
+        % removing the worst cluster by contracting the R matrix
+        R = R(1:end~=atomC_idx,:);
+        A = A(:,1:end~=atomC_idx);
+        K = size(R,1); % update K
+        
         % find clusters for lost members (polarity invariant)
         if strcmp(atom_measure,'varex')
             similarity = abs(A'*Xshuff(:,atomX_idx));
         elseif sum(strcmp(atom_measure,{'GEV','corr'}))
             similarity = corr(A, Xshuff(:,atomX_idx)).^2;
         end
-        % avoid reassigning to atomized cluster
-        similarity = similarity + eps;
-        similarity(atomC_idx,:) = 0;
         
         % reassign lost members to most similar clusters
         [~,sim_idx] = max(similarity,[],1);
+        update_count = 0;
+        updated_k = nan(1,K);
         for k=1:K
             R(k,atomX_idx(sim_idx==k)) = 1;
+            if sum(sim_idx==k) > 0
+                update_count = update_count + 1;
+                updated_k(update_count) = k;
+            end
         end
+        updated_k = updated_k(1:update_count);
         
         %sanity check that we did not loose members
         Nin=sum(sum(R));
@@ -371,21 +383,10 @@ while K >= Kmin
             error('Lost member')
         end
         
-        % removing the worst cluster by contracting the R matrix
-        R = R(1:end~=atomC_idx,:);
-        
-        K = size(R,1); % update K
-        
-        % check everybody is assigned
-        Nin=sum(sum(R));
-        if N>Nin
-            disp(['lost members B', int2str(Nin)])
-        end
         
         % compute new cluster prototypes and labels
         [Lshuff,~] = find(R); % labels
-        A = nan(C,K);
-        for k = 1:K
+        for k = updated_k
             k_idx = Lshuff==k;
             if sum(k_idx) == 1
                 A(:,k) = Xshuff(:,k_idx)/sqrt(Xshuff(:,k_idx)'*Xshuff(:,k_idx));
