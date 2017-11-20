@@ -179,19 +179,19 @@ line.W = { {'Style' style.W 'value' 1 'string' 'W' ...
     'tooltipstring' W_tipstr 'tag' 'W'} {} };
 geo.W = {[1 1]};
 
-% KL_nrm
-style.KL_nrm = 'checkbox';
-KLnrm_tipstr = 'Normalised Krzanowski-Lai criterion.';
-line.KL_nrm = { {'Style' style.KL_nrm 'value' 1 'string' 'KL_nrm' ...
-    'tooltipstring' KLnrm_tipstr 'tag' 'KL_nrm'} {} };
-geo.KL_nrm = {[1 1]};
-
 % KL
 style.KL = 'checkbox';
 KL_tipstr = 'Krzanowski-Lai criterion.';
-line.KL = { {'Style' style.KL 'value' 0 'string' 'KL' ...
+line.KL = { {'Style' style.KL 'value' 1 'string' 'KL' ...
     'tooltipstring' KL_tipstr 'tag' 'KL'} {} };
 geo.KL = {[1 1]};
+
+% KL_nrm
+style.KL_nrm = 'checkbox';
+KLnrm_tipstr = 'Normalised Krzanowski-Lai criterion.';
+line.KL_nrm = { {'Style' style.KL_nrm 'value' 0 'string' 'KL_nrm' ...
+    'tooltipstring' KLnrm_tipstr 'tag' 'KL_nrm'} {} };
+geo.KL_nrm = {[1 1]};
 
 % Do subplot?
 style.do_subplots = 'checkbox';
@@ -212,9 +212,9 @@ geo.Nmicro = {[1 .3] [1 .3]};
 
 %% Order inputs for GUI
 geometry = [geo.plot_range geo.meastitle geo.CV geo.GEV geo.W ...
-    geo.KL_nrm geo.KL {1} geo.do_subplots {1} geo.Nmicro];
+    geo.KL geo.KL_nrm {1} geo.do_subplots {1} geo.Nmicro];
 uilist = [line.plot_range line.meastitle line.CV line.GEV line.W ...
-    line.KL_nrm line.KL {{}} line.do_subplots {{}} line.Nmicro];
+    line.KL line.KL_nrm {{}} line.do_subplots {{}} line.Nmicro];
 % geometry = [geo.info geo.plot_range ]%geo.meastitle geo.CV geo.GEV geo.W];% ...
 % %     geo.KL {1} geo.do_subplots geo.Nmicro];
 % uilist = [line.info line.plot_range ]%line.meastitle line.CV line.GEV line.W];% ...

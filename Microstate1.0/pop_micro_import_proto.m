@@ -51,7 +51,7 @@ com = '';
 if nargin < 2
     help pop_micro_import_proto
     return;
-end;
+end
 
 
 %% Pop-up
@@ -59,7 +59,7 @@ if nargin < 3
     % pop-up window in case no further input is given
     dataset_names = {ALLEEG.setname};
     [dataset_idx, confirmed] = listdlg2('ListString',dataset_names,'PromptString',...
-        'Select dataset to import prototypes from:', 'selectionmode', 'single');
+        {'Select dataset to import prototypes from:'}, 'selectionmode', 'single');
     if ~confirmed
         return
     end

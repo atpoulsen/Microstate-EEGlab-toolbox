@@ -389,7 +389,7 @@ if isstruct(pop_out)
     if settings.aggregate_data
         datasetNames = {ALLEEG.setname};
         dataset_idx = listdlg2('ListString',datasetNames,'PromptString',...
-            'Select datasets to aggregate:');
+            {'Select datasets to aggregate:'});
     else
         dataset_idx = [];
     end
