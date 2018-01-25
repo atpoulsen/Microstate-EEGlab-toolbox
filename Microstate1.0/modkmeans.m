@@ -5,6 +5,11 @@ function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %  same terminology as used in ICA litetrature, i.e. X = AZ + e. The
 %  implementation follows the steps as given in [1]. Note that the
 %  non-active microstates in "Z" are not set zero.
+%  A new and optimised method for segmentation is also available. This
+%  method and upholds the same model assumptions, but has a different 
+%  iteration scheme. Preliminary tests show that this method is faster and
+%  is even slightly better at representing EEG with microstates. See [2]
+%  for more information.
 %  Explained variance is used to choose amongst multiple restarts, after
 %  smoothing, for the same number of microstates (K). To find the
 %  optimal number of microstates the modified predictive residual variance,
@@ -14,6 +19,9 @@ function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %        Segmentation of brain electrical activity into microstates: model
 %        estimation and validation. IEEE Transactions on Biomedical
 %        Engineering.
+%  [2] - Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K.
+%        (unpublished manuscript). Microstate EEGlab toolbox: An
+%        introductionary guide.
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
@@ -43,7 +51,9 @@ function [A_opt,L_opt,Res] = modkmeans(X,K_range,opts)
 %       fitmeas        - Readying measure of fit for selecting best
 %                        segmentation. 'CV': Crossvalidation criterion,
 %                        'GEV': Global explained variance, 'dispersion':
-%                        Dispersion of clusters. (default: 'CV').
+%                        Dispersion of clusters. (Default: 'CV').
+%       optimised      - Use the new and optimised segmentation introduced
+%                        in [2]? (Default: 0).
 %
 %  Outputs
 %  A_opt   - Spatial distribution of microstates (channels x K).
@@ -83,6 +93,7 @@ if ~isfield(opts,'lambda'),	opts.lambda = 5; end
 if ~isfield(opts,'b'), opts.b = 0; end
 if ~isfield(opts,'fitmeas'), opts.fitmeas = 'CV'; end
 fitmeas = opts.fitmeas;
+if ~isfield(opts,'optimised'), opts.optimised = 0; end
 
 if opts.b==0 % Checking if smoothing is requested
     opts.smooth = 0;
@@ -119,12 +130,20 @@ new_best = 0;
 
 %% Looping over all K values in K_range
 K_ind = 0;
+
 if opts.verbose
-    if opts.smooth
-        disp('Starting modified K-means with temporal smoothing')
+    if opts.optimised
+        algo_str = 'the new and optimised ';
     else
-        disp('Starting modified K-means without temporal smoothing')
+        algo_str = '';
     end
+    if opts.smooth
+        smooth_str = 'with';
+    else
+        smooth_str = 'without';
+    end
+    fprintf('Starting %smodified K-means %s temporal smoothing.\n',...
+        algo_str, smooth_str)
 end
 
 for K = K_range
@@ -152,8 +171,15 @@ for K = K_range
         end
         
         
-        % The Basic N-Microstate Algorithm (Table I)
-        [A,L,Z,sig2,R2,MSE,ind] = segmentation(X,K,const1,opts);
+        if opts.optimised
+            % The new and optimised Basic N-Microstate Algorithm (see [2])
+            [A,L,Z,sig2,R2,MSE,ind] = opt_segment(X,K,const1,opts);
+        else
+            % The original Basic N-Microstate Algorithm (Table I in [1])
+            [A,L,Z,sig2,R2,MSE,ind] = segmentation(X,K,const1,opts);
+        end
+        
+        
         if opts.verbose
             fprintf('Finished in %i iterations. ',ind)
         end
@@ -272,6 +298,65 @@ while abs(sig2_old-sig2) >= thresh*sig2 && max_iterations>ind
     end
     
     % Step 5
+    sig2 = (const1 - sum(sum(A(:,L).*X).^2)) / (N*(C-1));
+    
+end
+
+
+%% Saving solution converged on (step 7 and 8)
+% Step 7
+Z = A'*X; % NOTE, not setting non-activated microstates to zero
+[~,L] = max(Z.^2);
+
+% Step 8
+sig2_D = const1 / (N*(C-1));
+R2 = 1 - sig2/sig2_D;
+activations = zeros(size(Z));
+for n=1:N; activations(L(n),n) = Z(L(n),n); end % setting to zero
+MSE = mean(mean((X-A*activations).^2));
+end
+
+function [A,L,Z,sig2,R2,MSE,ind] = opt_segment(X,K,const1,opts)
+%  New and optimised implementation of the Basic N-Microstate Algorithm,
+%  as described in [2].
+
+%% Initialising (step 1 and 2a 3)
+[C,N] = size(X);
+deltaZ = nan(N,1); % preallocating
+
+% Reading settings
+max_iterations = opts.max_iterations;
+thresh = opts.thresh;
+
+% Step 1
+sig2_old = 0;
+sig2 = Inf;
+
+% Step 2a
+A = X(:,randperm(N,K)); % selecting K random timepoints to use as initial microstate maps
+A = bsxfun(@rdivide,A,sqrt(diag(A*A')));% normalising
+
+%% Iterations (step 3 to 6)
+ind = 0;
+while abs(sig2_old-sig2) >= thresh*sig2 && max_iterations>ind
+    ind = ind + 1;
+    sig2_old = sig2;
+    
+    % Find activations
+    Z = A'*X;
+    [~,L] = max(Z.^2);
+    for n=1:N
+        deltaZ(n) = Z(L(n),n);
+    end 
+    
+    % Find A
+    for k = 1:K
+        idx = L==k;
+        A(:,k) = X(:,idx)*deltaZ(idx);
+        A(:,k) = A(:,k)./sqrt(sum(A(:,k).^2));
+    end
+    
+    % Estimate residual noise
     sig2 = (const1 - sum(sum(A(:,L).*X).^2)) / (N*(C-1));
     
 end

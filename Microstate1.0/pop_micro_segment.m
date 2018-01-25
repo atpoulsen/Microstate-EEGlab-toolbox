@@ -50,6 +50,8 @@
 %                      in noise variance (default: 1e-6).
 %   'fitmeas'        - Readying measure of fit for selecting best
 %                      segmentation (default: 'CV').
+%   'optimised'      - Use the new and optimised segmentation introduced
+%                      in [2]? (Default: 0).
 %
 % * TAAHC:
 %   'polarity'       - Account for polarity? Only influences the
@@ -193,8 +195,9 @@ switch settings.algorithm
             'reps' 'Nrepetitions';
             'max_iterations' 'max_iterations';
             'thresh' 'threshold';
-            'verbose' 'verbose'
-            'fitmeas' 'fitmeas'};
+            'verbose' 'verbose';
+            'fitmeas' 'fitmeas';
+            'optimised' 'optimised'};
         opts = algosettings_to_opts(settings,opts_settings_names);
         opts.b = 0; % no post-segment smoothing (done elsewhere in toolbox)
         
@@ -461,6 +464,15 @@ line.threshold = { {'Style' 'text' 'string' 'Relative threshold for convergence:
     {'Style' style.threshold 'string' ' 1e-6 ' 'tag' 'threshold'} };
 geo.threshold = {[1 .2]};
 
+% Optimised
+style.optimised = 'checkbox';
+opti_tipstr = ['New and optimised method for segmentation. Preliminary tests '...
+    'shows to be faster and better at representing EEG. See doumentation for more info'];
+line.optimised = { {'Style' style.optimised 'value' 0 'string' 'Use optimised segmentation' ...
+    'tooltipstring' opti_tipstr 'tag' 'optimised'} {} };
+geo.optimised = {[1 1]};
+
+
 % % Smoothing info string
 % smooth_info_str = 'Temporal smoothing.';
 % line.smooth_info = { {} {'Style' 'text' 'string' smooth_info_str 'fontweight' 'bold'}};
@@ -482,8 +494,10 @@ geo.threshold = {[1 .2]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.Nrepetitions geo.max_iterations geo.threshold geo.fitmeas];
-uilist = [line.info line.Nrepetitions line.max_iterations line.threshold line.fitmeas];
+geometry = [geo.info geo.Nrepetitions geo.max_iterations geo.threshold...
+    geo.fitmeas geo.optimised];
+uilist = [line.info line.Nrepetitions line.max_iterations line.threshold...
+    line.fitmeas line.optimised];
 
 
 %% Create Popup
@@ -806,8 +820,10 @@ switch vargs{algo}
             {'Nrepetitions'  'integer'    []         10;
             'max_iterations'  'integer'    []         1000;
             'threshold'  'real'    []         1e-6 ;
-            'fitmeas'  'string'    []         'CV' } ];
-        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', 'threshold', 'fitmeas'} ];
+            'fitmeas'  'string'    []         'CV' ;
+            'optimised'  'integer'    []         0 } ];
+        to_algoset = [ to_algoset {'Nrepetitions', 'max_iterations', ...
+            'threshold', 'fitmeas', 'optimised'} ];
     case 'varmicro'
         varg_check = [varg_check;
             { 'Nrepetitions'  'integer'    []         10;
