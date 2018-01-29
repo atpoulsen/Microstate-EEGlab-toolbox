@@ -109,8 +109,11 @@ end
 
 % Calculate the spatial correlation between microstate prototypes and EEG
 SpatCorr = 1 - (GMD.^2)./2;
-SpatCorr = squeeze(reshape(SpatCorr,K,N,Ntrials));
 
+% APedroni added this 13.12.2017
+GEVtotal = sum((SpatCorr(sub2ind(size(SpatCorr),L,1:size(L,2))).*squeeze(std(X)).^2) ./sum(squeeze(std(X)).^2));
+
+SpatCorr = squeeze(reshape(SpatCorr,K,N,Ntrials));
 
 %% Sequentialize
 % take into account the sequence of occurence of microstates. This makes
@@ -136,12 +139,11 @@ for trial = Ntrials
 end
 
 
-%% Microstate Order for transition probabilities
+%% Microstate order for transition probabilities
 order = cell(Ntrials,1);
 for trial = 1:Ntrials
     [order{trial}, ~ ] = my_RLE(L(trial,:));
 end
-
 
 
 %% Preallocating arrays for stats and readying GFP
@@ -156,7 +158,6 @@ GFP = squeeze(std(X));
 if Ntrials>1
     GFP = GFP';
 end
-
 
 %% For each MS class...
 for k = 1:K
@@ -183,8 +184,9 @@ for k = 1:K
         MspatCorrTMP = SpatCorr(:,:,trial);
         MspatCorr(trial,k) = nanmean(MspatCorrTMP(k,L(trial,:)==k));
         
-        % global explained variance
-        GEV(trial,k) = (sum(GFP(trial,L(trial,:)==k) .* MspatCorrTMP(k,L(trial,:)==k)).^2)./ (sum(GFP(trial,L(trial,:)==k)).^2);
+        % global explained variance Changed by Pedroni 3.1.2018
+        GEV(trial,k) = sum( (GFP(trial,L(trial,:)==k) .* MspatCorrTMP(k,L(trial,:)==k)).^2) ./ sum(GFP(trial,:).^2)
+        
     end
 end
 
@@ -210,6 +212,7 @@ end
 
 %% Write to EEG structure
 %   per trial:
+Mstats.GEVtotal = GEVtotal;
 Mstats.Gfp = MGFP;
 Mstats.Occurence = MOcc;
 Mstats.Duration = MDur;
