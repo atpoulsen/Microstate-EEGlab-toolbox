@@ -1,9 +1,11 @@
 % pop_micro_selectdata() - selects and aggregates data for microstate segmentation.
 %
 % pop_micro_selectdata selects data for microstate segmentation, in
-% possible ways:
+% severeral different ways:
 % * For spontaneous data: selection of GFP peaks.
-% * For event related data: grand averaging. 
+% * For event related data: ERPs as average over epochs. If aggregating
+%   multiple datasets they can either be concatenated or averaged into
+%   single ERP. 
 % It is possible to aggregate data from multiple datasets loaded in ALLEEG.
 % When aggregating data a new dataset 'NewEEG' will be created and added to
 % ALLEEG.
@@ -25,7 +27,12 @@
 % Optional inputs:
 %   ALLEEG           - EEGlab structure containing all datasets read into
 %                      EEGlab as EEG structures.
-%  'datatype'        - 'spontaneous','ERP'.
+%  'datatype'        - 'spontaneous': Finds GFP peaks. 'ERPavg': Averages 
+%                       over epochs and aggregated datasets. 'ERPconc':  
+%                       Averages over epochs and concatenates aggregated
+%                       datasets. Default is 'ERPconc'.
+%   multiple datasets they can either be concatenated or averaged into
+%   single ERP.  . -----                      -**********
 %  'dataset_idx'     - Indices for datasets in ALLEEG to aggragate data
 %                      from. Leave empty to use current dataset (default).
 %  'avgref'          - Calculate average reference. 1 - yes (default), 
@@ -233,8 +240,8 @@ if strcmp(settings.datatype,'spontaneous')
     end
 
     
-elseif strcmp(settings.datatype,'ERP')
-    GA = [];
+elseif sum(strcmp(settings.datatype,{'ERPavg','ERPconc'}))
+    ERP = [];
     for i = 1:Ndatasets
         if aggregate_data
             X = ALLEEG(dataset_idx(i)).data;
@@ -254,9 +261,21 @@ elseif strcmp(settings.datatype,'ERP')
             X = X ./ mean(std(X(:,:),0,2));
         end
         
-        % prepareing dataset grand average
+        
         set_avg = mean(X,3);
-        GA = cat(3, GA, set_avg);
+        % preparing datasets in case of aggregation of multiple datasets 
+        if strcmp(settings.datatype,'ERPavg')
+            % grand average across datasets
+            ERP = cat(3, ERP, set_avg);
+        else
+            % concatenating dataset ERPs
+            ERP = cat(2, ERP, set_avg);
+        end
+    end
+    
+    if strcmp(settings.datatype,'ERPavg')
+        % averaging across datasets in case of aggregation
+        ERP = mean(ERP, 3);
     end
     
     
@@ -268,7 +287,7 @@ elseif strcmp(settings.datatype,'ERP')
         dataset_names = {ALLEEG.setname};
         NewEEG.microstate.data_origin.dataset_names = dataset_names(dataset_idx);
         
-        NewEEG.data = mean(GA,3);
+        NewEEG.data = ERP;
         NewEEG.setname = 'MicroERPdata';
         NewEEG.pnts = size(NewEEG.data,2);
         NewEEG.chanlocs = ALLEEG(dataset_idx(1)).chanlocs; % assuming datasets have the same chanlocs
@@ -279,7 +298,7 @@ elseif strcmp(settings.datatype,'ERP')
         ALLEEG = eeg_store(ALLEEG, NewEEG);
     else
         % Save data in EEG struct given as input.
-        EEG.microstate.data = mean(GA,3);
+        EEG.microstate.data = ERP;
     end  
 end
 
@@ -307,12 +326,14 @@ geo.info = {1 1 1};
 
 % Datatype
 style.datatype = 'popupmenu';
-popmenu.datatype = {'ERP' 'spontaneous'};
-data_str = popmenu.datatype{1}; %string for popupmenu
-for data_idx = 2:length(popmenu.datatype); data_str = [data_str '|' popmenu.datatype{data_idx}]; end;
-line.datatype = { {'Style' 'text' 'string' 'Datatype:'}, ...
+dropdown_data = {'ERP - Concatenate datasets' 'ERP - Average datasets'  ... % For dropdown menu
+    'Spontaneous - GFP peaks'};
+popmenu.datatype = {'ERPconc' 'ERPavg' 'spontaneous'}; % Corresponding calls for pop-function
+data_str = dropdown_data{1}; %string for popupmenu
+for data_idx = 2:length(dropdown_data); data_str = [data_str '|' dropdown_data{data_idx}]; end;
+line.datatype = { {'Style' 'text' 'string' 'Data type:'}, ...
     {'Style' style.datatype 'string' data_str 'tag' 'datatype' 'value' 1} };
-geo.datatype = {[1 .3]};
+geo.datatype = {[1 1]};
 
 % Aggregate data?
 style.aggregate_data = 'checkbox';
@@ -437,7 +458,7 @@ function settings = check_settings(vargs)
 %% check settings
 % Checks optional inputs for pop_micro_selectdata() and enters them in
 % settings struct. Undefined inputs is set to default values.
-varg_check = {  'datatype'         'string'	[]	'ERP';
+varg_check = {  'datatype'         'string'	[]	'ERPconc';
     'avgref'      'integer'	[]	1;
     'normalise' 'integer'	[]	0;
     'dataset_idx'  'real'    []         []};
