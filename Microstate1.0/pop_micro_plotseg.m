@@ -20,9 +20,9 @@
 %
 %  Optional input:
 %  'plotsegnos' - Plot Microstate numbers above microstate segments?
-%                 'first' (default) plots a number over the first segment
-%                 for each microstate, 'all' plots over all segments.
-%                 'none' means no numbers are plotted.
+%                 'first' plots a number over the first segment
+%                 for each microstate, 'all' (default) plots over all
+%                 segments. 'none' means no numbers are plotted.
 %  'plottopos'  - Plot topography of microstates? 1, yes (default); 0, no.
 %
 % Authors:
@@ -117,7 +117,7 @@ popmenu.plotsegnos = {'first' 'all' 'none'};
 segno_str = popmenu.plotsegnos{1}; %string for popupmenu
 for seg = 2:length(popmenu.plotsegnos); segno_str = [segno_str '|' popmenu.plotsegnos{seg}]; end;
 line.plotsegnos = { {'Style' 'text' 'string' 'Plot microstate numbers above segments:'}, ...
-    {'Style' style.plotsegnos 'string' segno_str 'tag' 'plotsegnos' 'value' 1} };
+    {'Style' style.plotsegnos 'string' segno_str 'tag' 'plotsegnos' 'value' 2} };
 geo.plotsegnos = {[1 1]};
 
 % Plot topographies?
@@ -179,7 +179,7 @@ function settings = check_settings(vargs)
 % Checks settings given as optional inputs for MicroPlot.
 % Undefined inputs is set to default values.
 varg_check = {   'label_type'  'string' []  'segmentation' ;
-    'plotsegnos'  'string' []  'first' ;
+    'plotsegnos'  'string' []  'all' ;
     'plottopos' 'integer' [] 1};
 settings = finputcheck( vargs, varg_check);
 if ischar(settings), error(settings); end; % check for error

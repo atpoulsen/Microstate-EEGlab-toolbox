@@ -66,7 +66,7 @@ if nargin < 1
     return
 else
     settings = check_settings(varargin);
-end;
+end
 
 MAX_TOPOS = 20; % maximum number of topoplots
 
@@ -102,11 +102,11 @@ if strcmp(settings.label_type, 'segmentation')
         times = (1:size(data,2))/EEG.srate*1e3; % Assuming ms.
     end
 elseif strcmp(settings.label_type, 'backfit')
-    if ~isfield(EEG.microstate.fit, 'bestLabel')
-        error(['Label type ''backfit'' not present in EEG.microstate.fit.' ...
-            'Run backfitting or try segmentation ''label'' type.'])
+    if ~isfield(EEG.microstate.fit, 'labels')
+        error(['Backfitted labels not present in EEG.microstate.fit.labels' ...
+            'Run backfitting or try labels from segmentation instead.'])
     end
-    labels = EEG.microstate.fit.bestLabel;
+    labels = EEG.microstate.fit.labels;
     data = EEG.data;
     times = EEG.times;
 else
