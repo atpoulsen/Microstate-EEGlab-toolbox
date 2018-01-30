@@ -4,8 +4,8 @@
 %  prototypes numbers.
 % 
 % Usage:
-%   >> pop_micro_plotseg ( EEG ); % pop up window
-%   >> pop_micro_plotseg ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
+%   >> pop_micro_plottopo ( EEG ); % pop up window
+%   >> pop_micro_plottopo ( EEG, 'key1', 'val1', 'key2', 'val2' ... )
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished

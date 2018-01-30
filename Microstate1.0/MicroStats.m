@@ -68,7 +68,7 @@ function Mstats = MicroStats(X,A,L,polarity,fs)
 if nargin < 5
     fs = 1;
 elseif nargin < 3
-    polaroty = 0;
+    polarity = 0;
 elseif nargin < 3
     help MicroStats;
     return;
@@ -185,7 +185,7 @@ for k = 1:K
         MspatCorr(trial,k) = nanmean(MspatCorrTMP(k,L(trial,:)==k));
         
         % global explained variance Changed by Pedroni 3.1.2018
-        GEV(trial,k) = sum( (GFP(trial,L(trial,:)==k) .* MspatCorrTMP(k,L(trial,:)==k)).^2) ./ sum(GFP(trial,:).^2)
+        GEV(trial,k) = sum( (GFP(trial,L(trial,:)==k) .* MspatCorrTMP(k,L(trial,:)==k)).^2) ./ sum(GFP(trial,:).^2);
         
     end
 end
