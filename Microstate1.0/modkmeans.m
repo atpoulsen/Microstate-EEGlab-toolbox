@@ -289,12 +289,18 @@ while abs(sig2_old-sig2) >= thresh*sig2 && max_iterations>ind
     
     % Step 4
     for k = 1:K
-        S = X(:,L==k)*X(:,L==k)';
-        %finding eigenvector with largest value and normalising it
-        [eVecs,eVals] = eig(S,'vector');
-        [~,idx] = max(abs(eVals));
-        A(:,k) = eVecs(:,idx);
-        A(:,k) = A(:,k)./sqrt(sum(A(:,k).^2));
+        k_idx = L==k;
+        if sum(k_idx)==0
+            % no members of this microstate
+            A(:,k) = 0;
+        else
+            S = X(:,k_idx)*X(:,k_idx)';
+            %finding eigenvector with largest value and normalising it
+            [eVecs,eVals] = eig(S,'vector');
+            [~,idx] = max(abs(eVals));
+            A(:,k) = eVecs(:,idx);
+            A(:,k) = A(:,k)./sqrt(sum(A(:,k).^2));
+        end
     end
     
     % Step 5
@@ -351,9 +357,14 @@ while abs(sig2_old-sig2) >= thresh*sig2 && max_iterations>ind
     
     % Find A
     for k = 1:K
-        idx = L==k;
-        A(:,k) = X(:,idx)*deltaZ(idx);
-        A(:,k) = A(:,k)./sqrt(sum(A(:,k).^2));
+        k_idx = L==k;
+        if sum(k_idx)==0
+            % no members of this microstate
+            A(:,k) = 0;
+        else
+            A(:,k) = X(:,k_idx)*deltaZ(k_idx);
+            A(:,k) = A(:,k)./sqrt(sum(A(:,k).^2));
+        end
     end
     
     % Estimate residual noise
