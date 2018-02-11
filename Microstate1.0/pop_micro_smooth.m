@@ -24,7 +24,7 @@
 % Method-specific inputs:
 % * Reject segments:
 %   'minTF'    - Redristibute segments smaller than minTF (in ms) to
-%                the next best fitting microstate (default = 10 ms).
+%                the next best fitting microstate (default = 20 ms).
 %   'polarity' - Account for polarity when calculating the global map
 %                dissimilarity. Typically off for spontaneous EEG and on
 %                for ERP data (default = 0).
@@ -220,7 +220,7 @@ geo.info = {1 1};
 % Redristibute segments (minTF)
 style.minTF = 'edit';
 line.minTF = { {'Style' 'text' 'string' 'Redistribute segments smaller than (in ms):'}, ...
-    {'Style' style.minTF 'string' ' 10 ' 'tag' 'minTF'} };
+    {'Style' style.minTF 'string' ' 20 ' 'tag' 'minTF'} };
 geo.minTF = {[1 .2]};
 
 % Polarity
@@ -319,7 +319,7 @@ smooth_type = find(strcmp('smooth_type',vargs)) + 1;
 switch vargs{smooth_type}
     case 'reject segments'
         varg_check = [varg_check;
-            {'minTF'  'integer'    []         10;
+            {'minTF'  'integer'    []         20;
             'polarity'  'integer'    []         0 } ];
     case 'windowed'
         varg_check = [varg_check;
