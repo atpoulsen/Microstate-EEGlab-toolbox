@@ -52,10 +52,13 @@
 %                      'corr' uses sum squared correlations, and 'varex'
 %                      uses variance explained (default: 'corr').
 %       polarity     - Account for polarity? Only influences the
-%                      atom_measures 'GEV', 'corr', and the 'detererminate'
+%                      atom_measures 'GEV', 'corr', and the 'determinism'
 %                      initialisation (ignored for other measures). If set
-%                      to 0, the sign of correlation is ignored. (default:
-%                      0).
+%                      to 0, the sign of correlation is ignored. If set to
+%                      1 (and the atom_measures is 'GEV' or 'corr'), the
+%                      cluster prototypes are calculated as the mean of
+%                      cluster members instead of the default first
+%                      eigenvector from eigs(). Default: 0.
 %       determinism  - TAAHC initialisation scheme for making the
 %                      clustering determinate. Initialises by so every
 %                      cluster consists of two samples, by agglomarating
@@ -215,10 +218,15 @@ if determinism
         if sum(k_idx) == 1
             A(:,k) = Xshuff(:,k_idx)/sqrt(Xshuff(:,k_idx)'*Xshuff(:,k_idx));
         else
-            % Use 1st PC => polarity invariant, like Pacual-Marqui (1995).
-            Sigk=Xshuff(:,k_idx)*Xshuff(:,k_idx)';
-            [Ak, ~] = eigs(Sigk,1);
-            A(:,k)=Ak;
+            if polarity
+                % average of cluster members
+                A(:,k) = mean(Xshuff(:,k_idx),2);
+            else % polarity invariant
+                % Use 1st PC => polarity invariant, like Pacual-Marqui (1995).
+                Sigk=Xshuff(:,k_idx)*Xshuff(:,k_idx)';
+                [Ak, ~] = eigs(Sigk,1);
+                A(:,k)=Ak;
+            end
         end
     end
     
@@ -292,12 +300,7 @@ while K >= Kmin
             Sigk=Xshuff(:,k_idx)*Xshuff(:,k_idx)';
             [Ak, ~] = eigs(Sigk,1);
             A(:,k)=Ak;
-        end
-        
-        if verbose
-            fprintf(' Total time spent: %i s.\n ', round(toc(tstart)))
-        end
-        
+        end        
     else
         %% Atomize
         if verbose
@@ -391,17 +394,18 @@ while K >= Kmin
             if sum(k_idx) == 1
                 A(:,k) = Xshuff(:,k_idx)/sqrt(Xshuff(:,k_idx)'*Xshuff(:,k_idx));
             else
-                % Use 1st PC => polarity invariant, like Pacual-Marqui (1995).
-                Sigk=Xshuff(:,k_idx)*Xshuff(:,k_idx)';
-                [Ak, ~] = eigs(Sigk,1);
-                A(:,k)=Ak;
+                if polarity && sum(strcmp(atom_measure,{'GEV','corr'}))
+                    % average of cluster members
+                    A(:,k) = mean(Xshuff(:,k_idx),2);
+                else % polarity invariant
+                    % Use 1st PC => polarity invariant, like Pacual-Marqui (1995).
+                    Sigk=Xshuff(:,k_idx)*Xshuff(:,k_idx)';
+                    [Ak, ~] = eigs(Sigk,1);
+                    A(:,k)=Ak;
+                end
             end
+            
         end
-        
-        if verbose
-            fprintf(' Total time spent: %i s.\n ', round(toc(tstart)))
-        end
-        
     end
     
     %% Save means and prototypes if K is in K_range
@@ -414,7 +418,8 @@ while K >= Kmin
         L(shuff_idx) = Lshuff;
         L_all{K_ind} = L;
     end
-end
-
+    if verbose
+        fprintf(' Total time spent: %i s.\n ', round(toc(tstart)))
+    end
 end
 
