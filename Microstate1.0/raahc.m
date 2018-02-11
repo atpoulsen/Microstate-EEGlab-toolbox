@@ -363,7 +363,11 @@ while K >= Kmin
         if strcmp(atom_measure,'varex')
             similarity = abs(A'*Xshuff(:,atomX_idx));
         elseif sum(strcmp(atom_measure,{'GEV','corr'}))
-            similarity = corr(A, Xshuff(:,atomX_idx)).^2;
+            if polarity
+                similarity = corr(A, Xshuff(:,atomX_idx));
+            else
+                similarity = abs(corr(A, Xshuff(:,atomX_idx)));
+            end
         end
         
         % reassign lost members to most similar clusters
