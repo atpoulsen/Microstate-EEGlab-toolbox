@@ -23,7 +23,7 @@
 %
 % Method-specific inputs:
 % * Reject segments:
-%   'minTF'    - Redristibute segments smaller than minTF (in ms) to
+%   'minTime'  - Redristibute segments smaller than minTime (in ms) to
 %                the next best fitting microstate (default = 20 ms).
 %   'polarity' - Account for polarity when calculating the global map
 %                dissimilarity. Typically off for spontaneous EEG and on
@@ -123,10 +123,10 @@ if strcmp(settings.smooth_type,'windowed')
 else
     opts.polarity = settings.polarity;
     
-    % converting minTF from ms to samples
-    minTF_ms = settings.minTF;
-    minTF_samples = round( minTF_ms * EEG.srate/1000 );
-    opts.minTF = minTF_samples;
+    % converting minTime from ms to samples
+    minTime_ms = settings.minTime;
+    minTime_samples = round( minTime_ms * EEG.srate/1000 );
+    opts.minTime = minTime_samples;
 end
 
 
@@ -217,11 +217,11 @@ info_str = 'Input parameters specific for ''Reject small segments''.';
 line.info = { {'Style' 'text' 'string' info_str} {} };
 geo.info = {1 1};
 
-% Redristibute segments (minTF)
-style.minTF = 'edit';
-line.minTF = { {'Style' 'text' 'string' 'Redistribute segments smaller than (in ms):'}, ...
-    {'Style' style.minTF 'string' ' 20 ' 'tag' 'minTF'} };
-geo.minTF = {[1 .2]};
+% Redristibute segments (minTime)
+style.minTime = 'edit';
+line.minTime = { {'Style' 'text' 'string' 'Redistribute segments smaller than (in ms):'}, ...
+    {'Style' style.minTime 'string' ' 30 ' 'tag' 'minTime'} };
+geo.minTime = {[1 .2]};
 
 % Polarity
 style.polarity = 'checkbox';
@@ -233,8 +233,8 @@ geo.polarity = {[1 .2]};
 
 
 %% Order inputs for GUI
-geometry = [geo.info geo.minTF geo.polarity];
-uilist = [line.info line.minTF line.polarity];
+geometry = [geo.info geo.minTime geo.polarity];
+uilist = [line.info line.minTime line.polarity];
 
 
 %% Create Popup
@@ -319,7 +319,7 @@ smooth_type = find(strcmp('smooth_type',vargs)) + 1;
 switch vargs{smooth_type}
     case 'reject segments'
         varg_check = [varg_check;
-            {'minTF'  'integer'    []         20;
+            {'minTime'  'integer'    []         30;
             'polarity'  'integer'    []         0 } ];
     case 'windowed'
         varg_check = [varg_check;

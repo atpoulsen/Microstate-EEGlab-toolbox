@@ -23,8 +23,8 @@
 % Method-specific inputs:
 % * Reject segments:
 %   opts.
-%        minTF    - Redristibute segments smaller than minTF (in samples) to
-%                   the next best fitting microstate (default = 3)
+%        minTime  - Redristibute segments smaller than minTime (in samples)
+%                   to the next best fitting microstate (default = 3).
 %        polarity - Account for polarity when calculating the global map
 %                   dissimilarity. Typically off for spontaneous EEG and on
 %                   for ERP data (default = 0).
@@ -194,19 +194,19 @@ end
 
 function L = reject_segments(X,A,opts)
 % Reject small segments
-% If there is a segment of TFs that is smaller than minTF it gets the next
+% If there is a segment of TFs that is smaller than minTime it gets the next
 % best label. This starts with segments of length 1 and then iterates up to
-% minTF (in samples).
+% minTime (in samples).
 
 %% Initialisation
 [C,N] = size(X);
 K = size(A,2);
 
 % Reading settings
-if isfield(opts,'minTF')
-    minTF = opts.minTF;
+if isfield(opts,'minTime')
+    minTime = opts.minTime;
 else
-    minTF = 3;
+    minTime = 3;
 end
 if isfield(opts,'polarity')
     polarity = opts.polarity;
@@ -241,7 +241,7 @@ end
 
 
 %% reject small maps
-for k = 1:minTF
+for k = 1:minTime
     cruns = k;
     while sum(cruns <= k) > 0
         idx = [];
