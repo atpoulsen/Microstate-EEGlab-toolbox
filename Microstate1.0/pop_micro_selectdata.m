@@ -218,7 +218,7 @@ if strcmp(settings.datatype,'spontaneous')
     %% Save chosen data in the EEG struct
     if aggregate_data
         % Add information to NewEEG struct
-        NewEEG.microstate.data = 'EEGdata';
+        NewEEG.microstate.data = 'set_data';
         NewEEG.microstate.GFPpeakidx = GFPpeakidx;
         NewEEG.microstate.data_origin.ALLEEG_idx = dataset_idx;
         dataset_names = {ALLEEG.setname};
@@ -282,7 +282,7 @@ elseif sum(strcmp(settings.datatype,{'ERPavg','ERPconc'}))
     %% Save chosen data in the EEG struct
     if aggregate_data
         % Add information to NewEEG struct
-        NewEEG.microstate.data = 'EEGdata';
+        NewEEG.microstate.data = 'set_data';
         NewEEG.microstate.data_origin.ALLEEG_idx = dataset_idx;
         dataset_names = {ALLEEG.setname};
         NewEEG.microstate.data_origin.dataset_names = dataset_names(dataset_idx);

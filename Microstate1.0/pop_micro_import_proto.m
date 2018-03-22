@@ -79,6 +79,10 @@ end
 
 EEG.microstate.prototypes = ALLEEG(dataset_idx).microstate.prototypes;
 
+if ~isfield(EEG.microstate,'data')
+    % To avoid having to run pop_micro_selectdata 
+    EEG.microstate.data = 'set_data';
+end
 
 %% Define command string
 com = sprintf('%s = pop_micro_import_proto( %s, %s, %d)', inputname(1), ...

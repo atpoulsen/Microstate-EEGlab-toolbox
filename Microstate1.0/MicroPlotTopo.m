@@ -65,6 +65,9 @@ end
 
 % Check plot_range
 if isempty(settings.plot_range)
+    if ~isfield(EEG.microstate,'algorithm_settings')
+       error('No ''algorithm_settings'' field in EEG.microstates. Please run segmentation or select the dataset segmentation was run on.') 
+    end
     plot_range = EEG.microstate.algorithm_settings.Nmicrostates;
 else
     plot_range = settings.plot_range;
@@ -143,7 +146,8 @@ axylab = axes('Units','Normalized','Position',...
 axes(axylab)
 axis off;
 text(0, .5, ylab,'FontSize',axfont,...
-    'Rotation',90,'fontweight','bold','HorizontalAlignment','Center');
+    'Rotation',90,'fontweight','bold','HorizontalAlignment','Center',...
+    'VerticalAlignment','bottom');
 
 % Loop over rows and collumns
 for r = 1:Nrows
