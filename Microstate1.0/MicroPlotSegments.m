@@ -27,6 +27,8 @@
 %                 for each microstate, 'all' plots over all segments.
 %                 'none' means no numbers are plotted.
 %  'plottopos'  - Plot topography of microstates? 1, yes (default); 0, no.
+%  'plot_time'  - [min max] time range, in ms, to be plotted. If empty
+%                 (default), all time points will be plotted.
 %
 % Authors:
 % Andreas Pedroni, andreas.pedroni@uzh.ch
@@ -111,6 +113,15 @@ elseif strcmp(settings.label_type, 'backfit')
     times = EEG.times;
 else
     error('Label type ''%s'' not supported.', settings.label_type)
+end
+
+if ~isempty(settings.plot_time)
+   t_start = find(times>=settings.plot_time(1),1,'first');
+   t_end = find(times>=settings.plot_time(2),1,'first');
+   
+   data = data(:,t_start:t_end);
+   times = times(t_start:t_end);
+   labels = labels(t_start:t_end);
 end
 
 icadefs;
@@ -217,7 +228,7 @@ for k = 1:K
     % plot GFP in color
     x = nan(1,length(times)); % adding extra sample before the first one.
     idx = labels(1,:) == k; % finding indices where microstate is active
-    if isempty(idx)
+    if sum(idx)==0
         warning('Microstate cluster %d is has no members. It''s prototype will not be plotted.',k)
         empty_clusters(end+1) = k;
         continue
@@ -321,6 +332,7 @@ function settings = check_settings(vargs)
 % Undefined inputs is set to default values.
 varg_check = {   'label_type'  'string' []  'segmentation' ;
     'plotsegnos'  'string' []  'first' ;
+    'plot_time' 'real' [] [] ;
     'plottopos' 'integer' [] 1};
 settings = finputcheck( vargs, varg_check);
 if ischar(settings), error(settings); end; % check for error

@@ -24,6 +24,8 @@
 %                 for each microstate, 'all' (default) plots over all
 %                 segments. 'none' means no numbers are plotted.
 %  'plottopos'  - Plot topography of microstates? 1, yes (default); 0, no.
+%  'plot_time'  - [min max] time range, in ms, to be plotted. If empty
+%                 (default), all time points will be plotted.
 %
 % Authors:
 % Andreas Trier Poulsen, atpo@dtu.dk
@@ -120,6 +122,14 @@ line.plotsegnos = { {'Style' 'text' 'string' 'Plot microstate numbers above segm
     {'Style' style.plotsegnos 'string' segno_str 'tag' 'plotsegnos' 'value' 2} };
 geo.plotsegnos = {[1 1]};
 
+% plot_time
+style.plot_time = 'edit';
+line.plot_time = { {'Style' 'text' 'string' '[Min Max] time range, in ms, to be plotted:'}, ...
+    {'Style' style.plot_time 'string' ' [ ] ' 'tag' 'plot_time'},... %end of first line
+    {'Style' 'text' 'string' '(If empty; entire range will be plotted).'},...
+    {} }; %end of second line
+geo.plot_time = {[1 .3] [1 .3]};
+
 % Plot topographies?
 style.plottopos = 'checkbox';
 line.plottopos = { {'Style' style.plottopos 'value' 1 'string' 'Plot microstate topographies.' ...
@@ -128,8 +138,8 @@ geo.plottopos = {[1 1]};
 
 
 %% Order inputs for GUI
-geometry = [geo.label_type geo.plotsegnos geo.plottopos];
-uilist = [line.label_type line.plotsegnos line.plottopos];
+geometry = [geo.label_type geo.plotsegnos geo.plot_time geo.plottopos];
+uilist = [line.label_type line.plotsegnos line.plot_time line.plottopos];
 
 
 %% Create Popup
@@ -180,6 +190,7 @@ function settings = check_settings(vargs)
 % Undefined inputs is set to default values.
 varg_check = {   'label_type'  'string' []  'segmentation' ;
     'plotsegnos'  'string' []  'all' ;
+    'plot_time' 'real' [] [] ;
     'plottopos' 'integer' [] 1};
 settings = finputcheck( vargs, varg_check);
 if ischar(settings), error(settings); end; % check for error
