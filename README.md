@@ -18,3 +18,4 @@ Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (2018).
 Microstate EEGlab toolbox: An introductory guide. bioRxiv
 
 v1.0 is fixed to this guide (excluding hotfixes). A new version will be created for future functional updates.
+MST1.0 is the version that is uploaded to EEGlab's extention page.
