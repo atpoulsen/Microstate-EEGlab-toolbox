@@ -30,8 +30,8 @@
 %  [3] - Brunet, D.(2011). Cartool reference Guide. Cartool v3.51.
 %
 %  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
-%  manuscript). Microstate EEGlab toolbox: An introductionary guide.
+%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (2018).
+%  Microstate EEGlab toolbox: An introductionary guide. bioRxiv.
 %
 %  Andreas Trier Poulsen, atpo@dtu.dk,
 %  Lars Kai Hansen.

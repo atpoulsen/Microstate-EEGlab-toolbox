@@ -13,8 +13,8 @@ function [A_opt,L_opt,Res] = varMicro(X,K_range,opts)
 %        Engineering.
 %
 %  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
-%  manuscript). Microstate EEGlab toolbox: An introductionary guide.
+%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (2018).
+%  Microstate EEGlab toolbox: An introductionary guide. bioRxiv.
 %
 %  Andreas Trier Poulsen, atpo@dtu.dk
 %  Technical University of Denmark, Cognitive systems - February 2017

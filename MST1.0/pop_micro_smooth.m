@@ -9,8 +9,8 @@
 %   >> EEG = pop_micro_smooth ( EEG, 'key1', 'val1')
 %
 % Please cite this toolbox as:
-% Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (unpublished
-% manuscript). Microstate EEGlab toolbox: An introductionary guide.
+% Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (2018).
+% Microstate EEGlab toolbox: An introductionary guide. bioRxiv.
 %
 % Inputs:
 %   EEG  - EEGlab EEG structure with microstate field.

@@ -5,8 +5,8 @@
 %   >> Mstats = MicroStats(X, A, L,polarity,fs)
 %
 %  Please cite this toolbox as:
-%  Poulsen, A. T., Pedroni, A., &  Hansen, L. K. (unpublished manuscript).
-%  Microstate EEGlab toolbox: An introductionary guide.
+%  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (2018).
+%  Microstate EEGlab toolbox: An introductionary guide. bioRxiv.
 %
 %  Inputs:
 %   X - EEG (channels x samples (x trials)).
