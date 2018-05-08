@@ -1,5 +1,7 @@
 ##Microstate EEGlab toolbox
 
+MST1.0 contains the newest stable version of the toolbox.
+
 Extention for EEGlab, enabling microstate analysis in Matlab. Includes full GUI support and ability to run from command window. 
 
 The toolbox includes ability to run microstate analysis on both ERP and spontaneous (e.g. resting state) EEG, using the following clustering algorithms:
