@@ -54,9 +54,6 @@ submenutools = uimenu( toolsmenu, 'label', 'Microstate analysis toolbox', 'separ
 % plotmenu = findobj(fig, 'tag', 'plot');
 % submenuplot = uimenu( plotmenu, 'label', 'Microstate analysis', 'separator', 'on');
 
-disp(catchstrs)
-disp(catchstrs.store_and_hist)
-
 
 %% Menu callback commands for submenu
 % Analysis functions
