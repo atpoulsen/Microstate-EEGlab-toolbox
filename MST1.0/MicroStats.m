@@ -39,8 +39,8 @@
 % Authors:
 %
 % Andreas Pedroni, andreas.pedroni@uzh.ch
-% University of Zürich, Psychologisches Institut, Methoden der
-% Plastizitätsforschung.
+% University of Zï¿½rich, Psychologisches Institut, Methoden der
+% Plastizitï¿½tsforschung.
 %
 % Andreas Trier Poulsen, atpo@dtu.dk
 % Technical University of Denmark, DTU Compute, Cognitive systems.
@@ -94,7 +94,7 @@ A_nrm = (A - repmat(mean(A,1), C, 1)) ./ repmat(std(A,1), C, 1);
 % Global map dissilarity
 GMD = nan(K,N);
 for k = 1:K
-    GMD(k,:) = sqrt(mean( (Xnrm - repmat(A_nrm(:,k),1,N)).^2 ));
+    GMD(k,:) = sqrt(mean( (Xnrm - repmat(A_nrm(:,k),1,N*Ntrials)).^2 ));
 end
 
 % Account for polarity (recommended 0 for spontaneous EEG)
