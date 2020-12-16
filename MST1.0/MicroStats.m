@@ -111,7 +111,9 @@ end
 SpatCorr = 1 - (GMD.^2)./2;
 
 % APedroni added this 13.12.2017
-GEVtotal = sum((SpatCorr(sub2ind(size(SpatCorr),L,1:size(L,2))).*squeeze(std(X)).^2) ./sum(squeeze(std(X)).^2));
+% GEVtotal = sum((SpatCorr(sub2ind(size(SpatCorr),L,1:size(L,2))).*squeeze(std(X)).^2) ./sum(squeeze(std(X)).^2));
+% MTruninger changed this 15.12.2020
+GEVtotal = sum(((SpatCorr(sub2ind(size(SpatCorr),L,1:size(L,2))).*squeeze(std(X))).^2) ./sum(squeeze(std(X)).^2));
 
 SpatCorr = squeeze(reshape(SpatCorr,K,N,Ntrials));
 
