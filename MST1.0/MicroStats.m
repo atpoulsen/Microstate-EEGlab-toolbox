@@ -1,8 +1,8 @@
 %MICROSTATS Calculates microstate statistics.
 %
 % Usage:
-%   >> Mstats = MicroStats(X, A, L)
-%   >> Mstats = MicroStats(X, A, L,polarity,fs)
+%   >> Mstats_inclRaw = MicroStats(X, A, L)
+%   >> Mstats_inclRaw = MicroStats(X, A, L,polarity,fs)
 %
 %  Please cite this toolbox as:
 %  Poulsen, A. T., Pedroni, A., Langer, N., &  Hansen, L. K. (2018).
@@ -35,17 +35,26 @@
 %
 %  Mstats.avgs - Structure of microstate parameters mean / and std over
 %                trials.
+% MTruninger added this 17.02.2021
+%  Mstats.raw - Structure of raw microstate parameters* per trial 
+%               (for duration, GFP, GEV and spatial correlation)
+%               *raw meaning calculated separately for each single
+%               occurring microstate
 %
 % Authors:
 %
 % Andreas Pedroni, andreas.pedroni@uzh.ch
-% University of Zürich, Psychologisches Institut, Methoden der
-% Plastizitätsforschung.
+% University of ZÃ¼rich, Psychologisches Institut, Methoden der
+% PlastizitÃ¤tsforschung.
 %
 % Andreas Trier Poulsen, atpo@dtu.dk
 % Technical University of Denmark, DTU Compute, Cognitive systems.
 %
 % September 2017.
+%
+% Some additions by Moritz Truninger, moritz.truninger@uzh.ch.
+%
+% February 2021
 
 % Copyright (C) 2017 Andreas Pedroni, andreas.pedroni@uzh.ch.
 %
@@ -63,7 +72,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function Mstats = MicroStats(X,A,L,polarity,fs)
+function Mstats = MicroStats_inclRaw(X,A,L,polarity,fs)
 %% Error check and initialisation
 if nargin < 5
     fs = 1;
@@ -161,6 +170,34 @@ if Ntrials>1
     GFP = GFP';
 end
 
+%% Preallocating structure and arrays for raw stats
+% MTruninger added this section 17.02.2021
+raw = struct;
+for trial2 = 1:Ntrials
+    
+    % name of current trial (i.e. epoch)
+    n_trial = join(["trial",string(trial2)],'');
+    
+    % get runvalue (= label) of each single microstate and runs 
+    % (= duration of a single microstate in timepoints)
+    [runvalue, runs] = my_RLE(L(trial2,:)); 
+    
+    % save microstate sequence (sequence of microstate labels)
+    raw.(n_trial).sequence = runvalue;
+
+    % get timepoints belonging to each single microstate
+    timepoints = tp_indivMS(runs);
+    raw.(n_trial).timepoints = timepoints;
+    
+    % prepare arrays within the structure
+    raw.(n_trial).GFP = zeros(1, length(runvalue));
+    raw.(n_trial).Duration = zeros(1, length(runvalue));
+    raw.(n_trial).MspatCorr = zeros(1, length(runvalue));
+    raw.(n_trial).GEV = zeros(1, length(runvalue));
+    
+    clear runvalue runs
+end 
+
 %% For each MS class...
 for k = 1:K
     for trial = 1:Ntrials
@@ -192,6 +229,43 @@ for k = 1:K
     end
 end
 
+%% Same for raw stats...
+% MTruninger added this section 17.02.2021
+% (this could possibly be implemented in the part above)
+for k = 1:K %for each MS class...
+    for trial = 1:Ntrials
+        
+        [runvalue, runs] = my_RLE(L(trial,:));
+            
+        % name of current trial (i.e. epoch)
+        n_trial = join(["trial",string(trial)],'');
+        
+        % needed below
+        MspatCorrTMP = SpatCorr(:,:,trial);
+        
+        for tt = find(raw.trial1.sequence(:)'==k)
+            
+            % Raw GFP
+            raw.(n_trial).GFP(tt) = ...
+                nanmean(GFP(raw.(n_trial).timepoints{tt}));
+            
+            % Raw Spat. Correlation
+            raw.(n_trial).MspatCorr(tt) = ...
+                nanmean(MspatCorrTMP(k,raw.(n_trial).timepoints{tt}));
+            
+            % Raw GEV
+            raw.(n_trial).GEV(tt) = ...
+                sum( (GFP(trial,raw.(n_trial).timepoints{tt}) .* ...
+                MspatCorrTMP(k,raw.(n_trial).timepoints{tt})).^2) ./...
+                sum(GFP(trial,:).^2);
+            
+            % Raw Duration
+            raw.(n_trial).Duration(tt) = runs(tt) .* (1000 / fs);
+            
+        end    
+    end
+end
+
 %% Transition Probabilities (as with hmmestimate(states,states);)
 for trial = 1:Ntrials
     states = order{trial,:};
@@ -213,7 +287,7 @@ end
 
 
 %% Write to EEG structure
-%   per trial:
+%   average per trial:
 Mstats.GEVtotal = GEVtotal;
 Mstats.Gfp = MGFP;
 Mstats.Occurence = MOcc;
@@ -225,6 +299,10 @@ Mstats.TP = TP;
 Mstats.seq = seq;
 Mstats.msFirstTF = msFirstTF;
 Mstats.polarity = polarity;
+
+% MTruninger added this 17.02.2021
+% raw data per trial
+Mstats.raw = raw;
 
 if Ntrials > 1
     % mean parameters
@@ -270,3 +348,21 @@ for i=2 :length(x)
 end
 
 end
+
+% MTruninger added this function 17.02.2021
+function tp = tp_indivMS(r)
+%% tp_indivMS
+% This function extracts the timepoints of each single microstate based on
+% the "runs" (output c from the my_RLE-function).
+
+tp = cell(1,length(r)); %prepare output cell array
+curr_t2 = 0; 
+
+for j = 1:length(r) % loop over all single microstates
+    t1 = curr_t2 + 1; % get start timepoint of current single microstate
+    t2 = t1 + r(j) - 1; % get end timepoint of current single microstate
+    curr_t2 = t2; 
+    %output
+    tp{j} = [t1:t2]; % save all timepoints belonging to the current single microstate
+end 
+end 
