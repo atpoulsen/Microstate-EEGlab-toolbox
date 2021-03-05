@@ -72,7 +72,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function Mstats = MicroStats_inclRaw(X,A,L,polarity,fs)
+function Mstats = MicroStats(X,A,L,polarity,fs)
 %% Error check and initialisation
 if nargin < 5
     fs = 1;
@@ -85,7 +85,7 @@ end
 
 [C,N,Ntrials] = size(X);
 K = size(A,2);
-
+GFP = squeeze(std(X));
 
 %% Spatial correlation between microstate prototypes and EEG
 % force average reference
@@ -94,6 +94,8 @@ X = X - repmat(mean(X,1),[C,1,1]);
 %Check if the data has more than one trial or not and reshape if necessary
 if Ntrials > 1 % for epoched data
     X = squeeze(reshape(X, C, N*Ntrials));
+    L_temp = L';
+    L_vec = reshape(L_temp, 1, N*Ntrials);
 end
 
 % Normalise EEG and maps (average reference and gfp = 1 for EEG)
@@ -101,10 +103,18 @@ Xnrm = X ./ repmat(std(X,1), C, 1); % already have average reference
 A_nrm = (A - repmat(mean(A,1), C, 1)) ./ repmat(std(A,1), C, 1);
 
 % Global map dissilarity
-GMD = nan(K,N);
+if Ntrials>1 % changed by NL 3.3.2021 GMD = nan(K,N);
+GMD = nan(K,N*Ntrials); 
+for k = 1:K
+    GMD(k,:) = sqrt(mean( (Xnrm - repmat(A_nrm(:,k),1,N*Ntrials)).^2 )); % changed by NL 3.3.2021  GMD(k,:) = sqrt(mean( (Xnrm - repmat(A_nrm(:,k),1,N)).^2 ));
+end
+else
+    GMD = nan(K,N); 
 for k = 1:K
     GMD(k,:) = sqrt(mean( (Xnrm - repmat(A_nrm(:,k),1,N)).^2 ));
 end
+end
+    
 
 % Account for polarity (recommended 0 for spontaneous EEG)
 if polarity == 0
@@ -122,7 +132,11 @@ SpatCorr = 1 - (GMD.^2)./2;
 % APedroni added this 13.12.2017
 % GEVtotal = sum((SpatCorr(sub2ind(size(SpatCorr),L,1:size(L,2))).*squeeze(std(X)).^2) ./sum(squeeze(std(X)).^2));
 % MTruninger changed this 15.12.2020
+if Ntrials>1 
+    GEVtotal = sum(((SpatCorr(sub2ind(size(SpatCorr),L_vec,1:size(L_vec,2))).*squeeze(std(X))).^2) ./sum(squeeze(std(X)).^2));
+else
 GEVtotal = sum(((SpatCorr(sub2ind(size(SpatCorr),L,1:size(L,2))).*squeeze(std(X))).^2) ./sum(squeeze(std(X)).^2));
+end
 
 SpatCorr = squeeze(reshape(SpatCorr,K,N,Ntrials));
 
@@ -165,7 +179,7 @@ MOcc = zeros(Ntrials,K);
 TCov = zeros(Ntrials,K);
 GEV = nan(Ntrials,K);
 MspatCorr = nan(Ntrials,K);
-GFP = squeeze(std(X));
+
 if Ntrials>1
     GFP = GFP';
 end
@@ -178,13 +192,13 @@ for trial2 = 1:Ntrials
     % name of current trial (i.e. epoch)
     n_trial = join(["trial",string(trial2)],'');
     
-    % get runvalue (= label) of each single microstate and runs 
+    % get runvalue (= label) of each single microstate and runs
     % (= duration of a single microstate in timepoints)
-    [runvalue, runs] = my_RLE(L(trial2,:)); 
+    [runvalue, runs] = my_RLE(L(trial2,:));
     
     % save microstate sequence (sequence of microstate labels)
     raw.(n_trial).sequence = runvalue;
-
+    
     % get timepoints belonging to each single microstate
     timepoints = tp_indivMS(runs);
     raw.(n_trial).timepoints = timepoints;
@@ -196,7 +210,7 @@ for trial2 = 1:Ntrials
     raw.(n_trial).GEV = zeros(1, length(runvalue));
     
     clear runvalue runs
-end 
+end
 
 %% For each MS class...
 for k = 1:K
@@ -234,7 +248,7 @@ end
 % (this could possibly be implemented in the part above)
 for k = 1:K %for each MS class...
     for trial = 1:Ntrials
-        
+     
         [runvalue, runs] = my_RLE(L(trial,:));
             
         % name of current trial (i.e. epoch)
@@ -243,11 +257,11 @@ for k = 1:K %for each MS class...
         % needed below
         MspatCorrTMP = SpatCorr(:,:,trial);
         
-        for tt = find(raw.trial1.sequence(:)'==k)
-            
+        for tt = find(raw.(n_trial).sequence(:)'==k)
+           
             % Raw GFP
             raw.(n_trial).GFP(tt) = ...
-                nanmean(GFP(raw.(n_trial).timepoints{tt}));
+                nanmean(GFP(trial,(raw.(n_trial).timepoints{tt}))); 
             
             % Raw Spat. Correlation
             raw.(n_trial).MspatCorr(tt) = ...
