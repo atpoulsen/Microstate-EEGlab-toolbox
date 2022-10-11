@@ -281,6 +281,7 @@ for k = 1:K %for each MS class...
 end
 
 %% Transition Probabilities (as with hmmestimate(states,states);)
+TP_total = zeros(K);
 for trial = 1:Ntrials
     states = order{trial,:};
     states = states(states ~= 0);
@@ -293,11 +294,17 @@ for trial = 1:Ntrials
         tr(states(count),states(count+1)) = tr(states(count),states(count+1)) + 1;
     end
     trRowSum = sum(tr,2);
+    %aggregate transition frequenices across trials
+    TP_total = TP_total + tr;
     % if we don't have any values then report zeros instead of NaNs.
     trRowSum(trRowSum == 0) = -inf;
     % normalize to give frequency estimate.
     TP(:,:,trial) = tr./repmat(trRowSum,1,numStates);
 end
+%divide by rowsum after aggregation
+total_RowSum = sum(TP_total, 2);
+total_RowSum(total_RowSum == 0) = -inf;
+TP_total = TP_total ./ repmat(total_RowSum, 1, K);
 
 
 %% Write to EEG structure
@@ -326,6 +333,7 @@ if Ntrials > 1
     Mstats.avgs.Coverage = nanmean(TCov,1);
     Mstats.avgs.GEV = nanmean(GEV,1);
     Mstats.avgs.MspatCorr = nanmean(MspatCorr,1);
+    Mstats.avgs.TP = TP_total;
     
     % standard deviation of parameters
     Mstats.avgs.stdGfp = nanstd(MGFP);
