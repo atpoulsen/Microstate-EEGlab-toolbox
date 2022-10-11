@@ -11,7 +11,8 @@
 %  Inputs:
 %   X - EEG (channels x samples (x trials)).
 %   A - Spatial distribution of microstate prototypes (channels x K).
-%   L - Label of the most active microstate at each timepoint (trials x
+%   L - Label of the most act
+ive microstate at each timepoint (trials x
 %       time).
 %
 %  Optional input:
@@ -39,7 +40,8 @@
 %  Mstats.raw - Structure of raw microstate parameters* per trial 
 %               (for duration, GFP, GEV and spatial correlation)
 %               *raw meaning calculated separately for each single
-%               occurring microstate
+%               occurring m
+icrostate
 %
 % Authors:
 %
@@ -118,7 +120,7 @@ end
 
 % Account for polarity (recommended 0 for spontaneous EEG)
 if polarity == 0
-    GMDinvpol = nan(K,N);
+    GMDinvpol = nan(K,N*Ntrials);
     for k = 1:K
         GMDinvpol(k,:) = sqrt(mean( (Xnrm - repmat(-A_nrm(:,k),1,size(Xnrm,2))).^2));
     end
