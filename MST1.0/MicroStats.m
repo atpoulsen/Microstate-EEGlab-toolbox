@@ -11,8 +11,7 @@
 %  Inputs:
 %   X - EEG (channels x samples (x trials)).
 %   A - Spatial distribution of microstate prototypes (channels x K).
-%   L - Label of the most act
-ive microstate at each timepoint (trials x
+%   L - Label of the most active microstate at each timepoint (trials x
 %       time).
 %
 %  Optional input:
@@ -40,8 +39,7 @@ ive microstate at each timepoint (trials x
 %  Mstats.raw - Structure of raw microstate parameters* per trial 
 %               (for duration, GFP, GEV and spatial correlation)
 %               *raw meaning calculated separately for each single
-%               occurring m
-icrostate
+%               occurring microstate
 %
 % Authors:
 %
